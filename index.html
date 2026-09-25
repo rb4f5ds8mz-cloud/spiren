@@ -213,7 +213,7 @@ function draw(){
 function drawTree(x,y){ctx.fillStyle="#5a3b2b";ctx.fillRect(x-7,y+20,14,55);ctx.fillStyle="#246b3d";ctx.beginPath();ctx.arc(x,y,38,0,Math.PI*2);ctx.fill();ctx.fillStyle="#32894a";ctx.beginPath();ctx.arc(x-22,y+12,28,0,Math.PI*2);ctx.arc(x+20,y+10,28,0,Math.PI*2);ctx.fill()}
 function drawEnemy(e){
  const frames={green:[20,155,290,425],yellow:[540,675,810,945],black:[1060,1195,1330,1465]};
- const xs=frames[e.type]||frames.green,idx=Math.floor(performance.now()/180)%xs.length;
+ const xs=frames[e.type]||frames.green,idx=Math.floor(performance.now()/90)%xs.length;
  if(spriteSheet.complete && spriteSheet.naturalWidth>0){ctx.save();ctx.translate(e.x,e.y);ctx.imageSmoothingEnabled=true;ctx.drawImage(spriteSheet,xs[idx],673,125,88,-e.r*1.65,-e.r*1.05,e.r*3.3,e.r*2.3);ctx.restore()}
  else{ctx.save();ctx.translate(e.x,e.y);ctx.fillStyle=e.color;ctx.beginPath();ctx.ellipse(0,4,e.r,e.r*.7,0,0,Math.PI*2);ctx.fill();ctx.restore()}
  if(e.hp<e.maxHp){ctx.fillStyle="#351923";ctx.fillRect(e.x-e.r,e.y-e.r-14,e.r*2,4);ctx.fillStyle="#4ee37a";ctx.fillRect(e.x-e.r,e.y-e.r-14,e.r*2*(e.hp/e.maxHp),4)}
@@ -224,7 +224,7 @@ function drawPlayer(){
  if(attacking){frames=[20,150,280,410,540];y=369;fw=125;fh=175}
  else if(moving){frames=[777,885,993,1101,1209,1317,1425,1533,1641];y=24;fw=108;fh=152}
  else{frames=[20,126,232,338,444,550,656];y=24;fw=106;fh=152}
- const idx=Math.floor(performance.now()/110)%frames.length;
+ const idx=Math.floor(performance.now()/70)%frames.length;
  if(spriteSheet.complete && spriteSheet.naturalWidth>0){ctx.save();ctx.translate(player.x,player.y);ctx.imageSmoothingEnabled=true;ctx.drawImage(spriteSheet,frames[idx],y,fw,fh,-48,-68,96,136);ctx.restore()}
  else{ctx.save();ctx.translate(player.x,player.y);ctx.fillStyle="#151b2d";ctx.beginPath();ctx.arc(0,0,23,0,Math.PI*2);ctx.fill();ctx.restore()}
 }

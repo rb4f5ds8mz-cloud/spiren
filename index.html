@@ -26,21 +26,73 @@ if(moving){player.moveVx+=m.x*accel*dt;player.moveVy+=m.y*accel*dt;const vm=Math
 function drawTree(x,y){ctx.fillStyle='#5a3b2b';ctx.fillRect(x-7,y+20,14,55);ctx.fillStyle='#246b3d';ctx.beginPath();ctx.arc(x,y,38,0,Math.PI*2);ctx.fill();ctx.fillStyle='#32894a';ctx.beginPath();ctx.arc(x-22,y+12,28,0,Math.PI*2);ctx.arc(x+20,y+10,28,0,Math.PI*2);ctx.fill()}
 function smoothVisual(obj,dt){if(obj.rx===undefined){obj.rx=obj.x;obj.ry=obj.y}const k=1-Math.exp(-dt*24);obj.rx+=(obj.x-obj.rx)*k;obj.ry+=(obj.y-obj.ry)*k;return {x:obj.rx,y:obj.ry}}
 function drawEnemy(e,dt){
- const pos=smoothVisual(e,dt),groups={green:[0,1,2,3],yellow:[4,5,6,7],black:[8,9,10,11]},frames=groups[e.type]||groups.green;
+ const pos=smoothVisual(e,dt);
+ const atlas={
+  green:[[0,528],[128,528],[256,528],[384,528]],
+  yellow:[[512,528],[640,528],[0,624],[128,624]],
+  black:[[256,624],[384,624],[512,624],[640,624]]
+ };
+ const frames=atlas[e.type]||atlas.green;
  const moving=Math.hypot(e.x-e.rx,e.y-e.ry)>.12;
- const idx=frames[Math.floor((performance.now()/115+e.animSeed)%frames.length)];
- const sx=(idx%6)*128,sy=528+Math.floor(idx/6)*96,bob=moving?Math.sin(e.animSeed*1.7)*1.5:Math.sin(e.animSeed)*.7;
- if(spriteSheet.complete&&spriteSheet.naturalWidth>0){ctx.save();ctx.translate(pos.x,pos.y+bob);const squash=1+Math.sin(e.animSeed*1.7)*.018;ctx.scale(1/squash,squash);ctx.drawImage(spriteSheet,sx,sy,128,96,-e.r*1.35,-e.r*.85,e.r*2.7,e.r*1.7);ctx.restore()}
- else{ctx.save();ctx.translate(pos.x,pos.y+bob);ctx.fillStyle=e.type==='green'?'#55d66b':e.type==='yellow'?'#f0d84a':'#292b34';ctx.beginPath();ctx.ellipse(0,4,e.r,e.r*.7,0,0,Math.PI*2);ctx.fill();ctx.restore()}
- if(e.hp<e.maxHp){ctx.fillStyle='#351923';ctx.fillRect(pos.x-e.r,pos.y-e.r-12+bob,e.r*2,4);ctx.fillStyle='#4ee37a';ctx.fillRect(pos.x-e.r,pos.y-e.r-12+bob,e.r*2*(e.hp/e.maxHp),4)}
+ const fi=Math.floor(performance.now()/150+e.animSeed)%frames.length;
+ const [sx,sy]=frames[fi];
+ const bob=moving?Math.sin(e.animSeed*1.5)*1.2:Math.sin(e.animSeed)*.5;
+
+ if(spriteSheet.complete&&spriteSheet.naturalWidth>0){
+  ctx.save();
+  ctx.translate(pos.x,pos.y+bob);
+  ctx.imageSmoothingEnabled=true;
+  ctx.drawImage(spriteSheet,sx,sy,128,96,-e.r*1.35,-e.r*.85,e.r*2.7,e.r*1.7);
+  ctx.restore();
+ }else{
+  ctx.save();
+  ctx.translate(pos.x,pos.y+bob);
+  ctx.fillStyle=e.type==='green'?'#55d66b':e.type==='yellow'?'#f0d84a':'#292b34';
+  ctx.beginPath();
+  ctx.ellipse(0,4,e.r,e.r*.7,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+ }
+ if(e.hp<e.maxHp){
+  ctx.fillStyle='#351923';
+  ctx.fillRect(pos.x-e.r,pos.y-e.r-12+bob,e.r*2,4);
+  ctx.fillStyle='#4ee37a';
+  ctx.fillRect(pos.x-e.r,pos.y-e.r-12+bob,e.r*2*(e.hp/e.maxHp),4);
+ }
 }
 function drawPlayer(dt){
- const moving=Math.hypot(moveInput().x,moveInput().y)>.05;let frames,y;
- if(attacking){frames=[10,11,12,13,14];y=176}else if(moving){frames=[5,6,7,8,9];y=0}else{frames=[0,1,2,3,4];y=0}
- const frameSpeed=attacking?13:moving?10:5,idx=frames[Math.floor(player.animTime*frameSpeed)%frames.length];
- const sx=(idx%6)*128,sy=Math.floor(idx/6)*176,pos=smoothVisual(player,dt),bob=moving?Math.sin(player.animTime*1.35)*2:Math.sin(player.animTime)*.7;
- if(spriteSheet.complete&&spriteSheet.naturalWidth>0){ctx.save();ctx.translate(pos.x,pos.y+bob);ctx.scale(player.dir||1,1);const squash=moving?1+Math.sin(player.animTime*1.35)*.025:1;ctx.scale(1/squash,squash);ctx.drawImage(spriteSheet,sx,sy,128,176,-50,-70,100,138);ctx.restore()}
- else{ctx.save();ctx.translate(pos.x,pos.y+bob);ctx.scale(player.dir||1,1);ctx.drawImage(ninja,-35,-55,70,101);ctx.restore()}
+ const moving=Math.hypot(moveInput().x,moveInput().y)>.05;
+ let frames;
+ if(attacking){
+  frames=[[512,176],[640,176],[0,352],[128,352],[256,352]];
+ }else if(moving){
+  frames=[[640,0],[0,176],[128,176],[256,176],[384,176]];
+ }else{
+  frames=[[0,0],[128,0],[256,0],[384,0],[512,0]];
+ }
+
+ const frameSpeed=attacking?13:moving?10:5;
+ const [sx,sy]=frames[Math.floor(player.animTime*frameSpeed)%frames.length];
+ const pos=smoothVisual(player,dt);
+ const bob=moving?Math.sin(player.animTime*1.35)*1.8:Math.sin(player.animTime)*.5;
+
+ if(spriteSheet.complete&&spriteSheet.naturalWidth>0){
+  ctx.save();
+  ctx.translate(pos.x,pos.y+bob);
+  ctx.scale(player.dir||1,1);
+  ctx.imageSmoothingEnabled=true;
+  ctx.drawImage(spriteSheet,sx,sy,128,176,-50,-70,100,138);
+  ctx.restore();
+ }else{
+  ctx.save();
+  ctx.translate(pos.x,pos.y+bob);
+  ctx.scale(player.dir||1,1);
+  ctx.fillStyle='#151b2d';
+  ctx.beginPath();
+  ctx.arc(0,0,23,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+ }
 }
 function drawShuriken(x,y,a){
  if(spriteSheet.complete&&spriteSheet.naturalWidth>0){ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.drawImage(spriteSheet,640,720,128,96,-14,-14,28,28);ctx.restore();return}

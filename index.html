@@ -2,262 +2,344 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spiren — Turn Based RPG</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Spiren — RPG por turnos</title>
 <style>
+:root{
+  --bg:#050913;
+  --panel:rgba(7,13,25,.88);
+  --line:#263452;
+  --text:#f3f6ff;
+  --muted:#aab5cb;
+  --red:#ff3e4f;
+  --blue:#20a9ff;
+  --gold:#ffc94d;
+  --green:#35e887;
+}
 *{box-sizing:border-box}
-body{
-  margin:0;
-  min-height:100vh;
-  background:#08090e;
-  color:#eee;
-  font-family:system-ui,-apple-system,Segoe UI,sans-serif;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:16px;
-}
-#game{
-  width:min(960px,100%);
-  background:#11131b;
-  border:1px solid #303342;
-  border-radius:18px;
-  overflow:hidden;
-  box-shadow:0 20px 60px #0008;
-}
-header{
-  padding:14px 18px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  border-bottom:1px solid #292c38;
-}
-.logo{font-weight:900;letter-spacing:3px}
-.badge{font-size:12px;color:#aaa}
-#arena{
+html,body{margin:0;min-height:100%;background:#02050b;color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button{font:inherit}
+body{display:flex;justify-content:center}
+.game{
+  width:100%;max-width:760px;min-height:100vh;
+  background:#050913;overflow:hidden;
   position:relative;
-  min-height:470px;
-  overflow:hidden;
+}
+.top{
+  min-height:88px;padding:14px 14px 10px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:linear-gradient(180deg,#07101f 0%,#050913 100%);
+  border-bottom:1px solid #1e2b45;
+  position:relative;z-index:10;
+}
+.brand{min-width:0}
+.logo{
+  font-weight:1000;font-style:italic;letter-spacing:4px;font-size:34px;line-height:.9;
+  text-shadow:3px 3px 0 #8c1020,0 0 18px #ff244455;
+}
+.subtitle{font-size:11px;letter-spacing:1px;color:#aeb9cd;margin-top:8px;white-space:nowrap}
+.nav{display:flex;gap:6px}
+.nav button{
+  width:62px;min-height:58px;padding:6px 3px;border:1px solid #263653;border-radius:12px;
+  background:linear-gradient(#0d182a,#08101d);color:#c8d2e5;font-size:10px;
+}
+.nav .ico{display:block;font-size:22px;margin-bottom:2px}
+
+.battle{
+  position:relative;min-height:590px;overflow:hidden;
   background:
-    radial-gradient(circle at 50% 35%,#30384a 0,#181c27 35%,#090b10 75%);
+    radial-gradient(circle at 68% 21%,rgba(231,239,255,.95) 0 8%,rgba(187,205,255,.28) 8.5%,transparent 19%),
+    radial-gradient(ellipse at 50% 48%,#183252 0,#0b182b 36%,#050913 76%);
+}
+.stars{
+  position:absolute;inset:0;
+  background-image:
+    radial-gradient(circle at 15% 18%,#fff 0 1px,transparent 2px),
+    radial-gradient(circle at 37% 11%,#fff 0 1px,transparent 2px),
+    radial-gradient(circle at 83% 15%,#fff 0 1px,transparent 2px),
+    radial-gradient(circle at 55% 31%,#b7c9ff 0 1px,transparent 2px);
+  opacity:.65;
 }
 .moon{
-  position:absolute;
-  width:130px;height:130px;border-radius:50%;
-  background:#e9edf2;
-  right:11%;top:9%;
-  box-shadow:0 0 50px #cbd6ff55;
+  position:absolute;width:108px;height:108px;border-radius:50%;right:17%;top:7%;
+  background:#e8edff;box-shadow:0 0 55px #a9c5ff88;
 }
-.ground{
-  position:absolute;
-  left:0;right:0;bottom:0;height:35%;
-  background:linear-gradient(#151a22,#090b10);
-  border-top:1px solid #343947;
+.mountain{
+  position:absolute;bottom:29%;left:0;width:100%;height:35%;
+  background:linear-gradient(135deg,transparent 0 22%,#0c1b2d 22% 43%,transparent 43% 49%,#10253a 49% 75%,transparent 75%);
+  opacity:.95;
 }
-#player{
-  position:absolute;
-  left:19%;
-  bottom:17%;
-  width:163px;
-  image-rendering:auto;
-  filter:drop-shadow(0 12px 7px #000b);
-  transition:left .25s ease, bottom .25s ease, transform .15s ease;
+.castle{
+  position:absolute;right:8%;bottom:38%;font-size:54px;filter:drop-shadow(0 5px 8px #000);
 }
-#enemy{
-  position:absolute;
-  right:18%;
-  bottom:20%;
-  width:120px;height:130px;
-  display:grid;place-items:center;
-  font-size:68px;
-  filter:drop-shadow(0 15px 8px #000b);
+.torii{
+  position:absolute;left:10%;bottom:31%;width:180px;height:150px;opacity:.9;
 }
-.enemy-core{
-  width:92px;height:92px;border-radius:45% 55% 50% 50%;
-  background:radial-gradient(circle at 35% 30%,#b8e86d,#476b32 55%,#1b2518);
-  border:3px solid #172013;
-  display:grid;place-items:center;
-  box-shadow:inset -10px -12px 0 #0003;
+.torii:before{
+  content:"";position:absolute;left:12px;right:12px;top:15px;height:15px;
+  background:#111a29;border:4px solid #060b14;box-shadow:0 4px 0 #273149;
 }
-.enemy-eyes{font-size:30px}
-#hud{
-  padding:14px;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  border-top:1px solid #292c38;
+.torii:after{
+  content:"";position:absolute;left:35px;right:35px;top:27px;bottom:0;
+  border-left:14px solid #0b1320;border-right:14px solid #0b1320;
 }
-.panel{
-  background:#181b24;
-  border:1px solid #303442;
-  border-radius:12px;
-  padding:12px;
+.path{
+  position:absolute;bottom:0;left:-10%;width:120%;height:35%;
+  background:linear-gradient(170deg,transparent 0 20%,#101827 21% 100%);
+  clip-path:polygon(34% 0,66% 0,100% 100%,0 100%);
 }
-.name{font-weight:800;margin-bottom:7px}
-.bar{height:12px;background:#090a0e;border-radius:99px;overflow:hidden}
-.fill{height:100%;width:100%;background:#55d68b;transition:width .25s}
-.enemybar .fill{background:#e75b68}
-.stats{display:flex;justify-content:space-between;font-size:12px;color:#aaa;margin-top:6px}
-#actions{
-  padding:14px;
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
+.lantern{
+  position:absolute;bottom:30%;font-size:30px;filter:drop-shadow(0 0 12px #ffbd4b);
 }
-button{
-  min-height:48px;
-  border:1px solid #3b4050;
-  border-radius:10px;
-  background:#202430;
-  color:#fff;
-  font-weight:800;
-  cursor:pointer;
+.l1{left:7%}.l2{right:7%}
+
+.hero,.foe{
+  position:absolute;bottom:13%;z-index:4;
 }
-button:hover{background:#292e3d}
-button:disabled{opacity:.4;cursor:not-allowed}
-#log{
-  margin:0 14px 14px;
-  padding:12px;
-  min-height:52px;
-  background:#0b0d12;
-  border:1px solid #292c38;
-  border-radius:10px;
-  color:#c7cbd5;
-  font-size:14px;
+.hero{left:5%;width:48%;max-width:330px}
+.foe{right:5%;width:39%;max-width:280px}
+.hero img{
+  width:100%;max-height:250px;object-fit:contain;
+  filter:drop-shadow(0 18px 12px #000);
 }
-@media(max-width:620px){
-  #arena{min-height:390px}
-  #player{width:125px;left:12%}
-  #enemy{right:9%;transform:scale(.85)}
-  #actions{grid-template-columns:1fr}
-  #hud{grid-template-columns:1fr}
+.hero-fallback{
+  display:none;color:#fff;text-align:center;font-size:90px;
+}
+.foe-body{
+  width:min(190px,100%);aspect-ratio:1/.95;margin:auto;
+  border-radius:45% 50% 45% 50%;
+  background:
+    radial-gradient(circle at 32% 25%,#d8ff83 0 6%,transparent 7%),
+    radial-gradient(circle at 38% 35%,#a9f33c 0 13%,transparent 14%),
+    linear-gradient(145deg,#a6ec38,#416b22 65%,#172713);
+  border:5px solid #172314;
+  box-shadow:inset -15px -18px 0 #0004,0 18px 16px #0009,0 0 35px #8cff2444;
+  position:relative;
+}
+.foe-body:before{
+  content:"";position:absolute;width:55%;height:45%;right:-12%;top:8%;
+  border-radius:50%;background:repeating-radial-gradient(circle at 50% 50%,#2d3b25 0 9px,#131b14 10px 15px);
+  border:4px solid #121a10;transform:rotate(-18deg);
+}
+.eyes{position:absolute;left:22%;top:32%;font-size:28px;letter-spacing:18px;color:#ecffad;text-shadow:0 0 12px #b6ff3c}
+.mouth{position:absolute;left:44%;top:57%;font-size:18px}
+.shadow{
+  position:absolute;bottom:9%;height:18px;width:35%;border-radius:50%;background:#0009;filter:blur(5px)
+}
+.shero{left:7%}.sfoe{right:6%}
+
+.card{
+  position:absolute;top:18px;z-index:8;width:44%;
+  padding:10px 12px;border:1px solid #324566;border-radius:14px;
+  background:linear-gradient(135deg,rgba(8,18,34,.94),rgba(7,12,23,.86));
+  backdrop-filter:blur(8px);box-shadow:0 10px 28px #0006
+}
+.player-card{left:10px}.enemy-card{right:10px}
+.card-title{font-weight:900;font-size:16px;margin-bottom:7px}
+.bar{height:13px;background:#02050a;border-radius:99px;overflow:hidden;border:1px solid #1e2b3f}
+.fill{height:100%;width:100%;transition:width .25s}
+.hp{background:linear-gradient(90deg,#ff4556,#ff6976)}
+.en{background:linear-gradient(90deg,#0ba9ff,#55d8ff);margin-top:4px}
+.enemyhp{background:linear-gradient(90deg,#ff3e4f,#ff6b58)}
+.numbers{display:flex;justify-content:space-between;color:#d8dfed;font-size:11px;margin-top:4px}
+
+.bottom{
+  background:linear-gradient(#08101e,#050913);
+  border-top:1px solid #20304a;
+  padding:12px 12px calc(14px + env(safe-area-inset-bottom));
+}
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.action{
+  min-height:88px;border:1px solid #34425b;border-radius:13px;background:#0a1220;
+  color:white;padding:7px 4px;font-weight:900;box-shadow:inset 0 0 18px #0004
+}
+.action .big{display:block;font-size:29px;margin-bottom:3px}
+.action small{display:block;font-size:9px;color:#9eabc0;font-weight:600}
+.action.attack{border-color:#ff4050;box-shadow:inset 0 0 22px #ff203622}
+.action.skill{border-color:#138dff;box-shadow:inset 0 0 22px #087dff22}
+.action.guard{border-color:#d29b2f}
+.action.item{border-color:#1cb76a}
+.action:disabled{opacity:.38;filter:grayscale(.7)}
+
+.log{
+  margin-top:10px;padding:12px 14px;border:1px solid #2c3a55;border-radius:12px;
+  background:#070d18;color:#d5ddec;min-height:58px;font-size:13px
+}
+.log b{color:#ff866d}
+
+.extra{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.extra-card{
+  border:1px solid #273650;border-radius:12px;background:#080f1b;padding:11px
+}
+.extra h3{font-size:14px;margin:0 0 8px}
+.skill-row,.item-row{
+  display:flex;align-items:center;gap:9px;padding:8px 0;border-top:1px solid #1b2940
+}
+.skill-icon,.item-icon{
+  width:42px;height:42px;border:1px solid #2b4668;border-radius:9px;display:grid;place-items:center;font-size:22px;background:#0a1627
+}
+.skill-row strong,.item-row strong{font-size:12px}.muted{font-size:10px;color:#8996ad}
+
+@media(max-width:520px){
+  .top{align-items:flex-start}.logo{font-size:28px}.subtitle{font-size:9px}
+  .nav button{width:50px;min-height:50px}.nav .ico{font-size:18px}
+  .battle{min-height:510px}
+  .card{top:10px;padding:8px;width:46%}.card-title{font-size:12px}
+  .hero{bottom:13%;left:2%;width:52%}.foe{bottom:16%;right:1%;width:38%}
+  .hero img{max-height:205px}.foe-body{max-width:145px}
+  .torii{transform:scale(.72);transform-origin:left bottom}
+  .castle{font-size:40px}
+  .actions{grid-template-columns:repeat(2,1fr)}
+  .action{min-height:72px}
+  .extra{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
-<div id="game">
-<header>
-  <div class="logo">SPIREN</div>
-  <div class="badge">PROTOTIPO · COMBATE POR TURNOS</div>
+<main class="game">
+<header class="top">
+  <div class="brand">
+    <div class="logo">SPIREN</div>
+    <div class="subtitle">PROTOTIPO · COMBATE POR TURNOS</div>
+  </div>
+  <nav class="nav">
+    <button type="button"><span class="ico">🗺️</span>Mapa</button>
+    <button type="button"><span class="ico">🎒</span>Inventario</button>
+    <button type="button"><span class="ico">📊</span>Estado</button>
+    <button type="button"><span class="ico">⚙️</span>Ajustes</button>
+  </nav>
 </header>
 
-<section id="arena">
-  <div class="moon"></div>
-  <div class="ground"></div>
+<section class="battle" aria-label="Campo de batalla">
+  <div class="stars"></div><div class="moon"></div><div class="mountain"></div>
+  <div class="castle">🏯</div><div class="torii"></div>
+  <div class="lantern l1">🏮</div><div class="lantern l2">🏮</div><div class="path"></div>
 
-  <img id="player" src="player.png" alt="Spiren, protagonista">
-  <div id="enemy">
-    <div class="enemy-core"><div class="enemy-eyes">●‿●</div></div>
+  <section class="card player-card">
+    <div class="card-title">SPIREN · Nv. 1</div>
+    <div class="bar"><div id="hpFill" class="fill hp"></div></div>
+    <div class="bar"><div id="enFill" class="fill en"></div></div>
+    <div class="numbers"><span>PV <b id="hpText">100 / 100</b></span><span>EN <b id="enText">50 / 50</b></span></div>
+  </section>
+
+  <section class="card enemy-card">
+    <div class="card-title">CARACOL SOMBRÍO · Nv. 1</div>
+    <div class="bar"><div id="enemyFill" class="fill enemyhp"></div></div>
+    <div class="numbers"><span>PV <b id="enemyText">80 / 80</b></span><span id="turn">Tu turno</span></div>
+  </section>
+
+  <div class="shadow shero"></div><div class="shadow sfoe"></div>
+  <div class="hero">
+    <img src="player.png" alt="Spiren" onerror="this.style.display='none';document.querySelector('.hero-fallback').style.display='block'">
+    <div class="hero-fallback">🥷</div>
+  </div>
+  <div class="foe">
+    <div class="foe-body"><div class="eyes">● ●</div><div class="mouth">⌣</div></div>
   </div>
 </section>
 
-<section id="hud">
-  <div class="panel">
-    <div class="name">SPIREN · Nv. 1</div>
-    <div class="bar"><div id="hp" class="fill"></div></div>
-    <div class="stats"><span>PV <b id="hpText">100 / 100</b></span><span>Turno</span></div>
+<section class="bottom">
+  <div class="actions">
+    <button id="attack" class="action attack"><span class="big">⚔️</span>ATAQUE<small>Daño físico básico</small></button>
+    <button id="skill" class="action skill"><span class="big">🌙</span>CORTE ESPIRITUAL<small>Daño medio + crítico</small></button>
+    <button id="guard" class="action guard"><span class="big">🛡️</span>DEFENSA<small>Reduce el daño</small></button>
+    <button id="item" class="action item"><span class="big">🧪</span>OBJETO<small>Restaura 30 PV</small></button>
   </div>
-  <div class="panel enemybar">
-    <div class="name">CRIATURA SOMBRÍA</div>
-    <div class="bar"><div id="enemyHp" class="fill"></div></div>
-    <div class="stats"><span>PV <b id="enemyHpText">80 / 80</b></span><span id="turnText">Tu turno</span></div>
+
+  <div id="log" class="log"><b>¡Aparece un Caracol Sombrío!</b><br>Tu turno. ¿Qué quieres hacer?</div>
+
+  <div class="extra">
+    <section class="extra-card">
+      <h3>HABILIDADES</h3>
+      <div class="skill-row"><div class="skill-icon">🌙</div><div><strong>Corte Rápido</strong><br><span class="muted">Daño: 20 · Energía: 0</span></div></div>
+      <div class="skill-row"><div class="skill-icon">🔴</div><div><strong>Corte Espiritual</strong><br><span class="muted">Daño: 35 · Energía: 15</span></div></div>
+    </section>
+    <section class="extra-card">
+      <h3>OBJETOS</h3>
+      <div class="item-row"><div class="item-icon">🧪</div><div><strong>Poción Pequeña ×3</strong><br><span class="muted">Restaura 30 PV</span></div></div>
+      <div class="item-row"><div class="item-icon">🔷</div><div><strong>Poción de Energía ×2</strong><br><span class="muted">Restaura 20 EN</span></div></div>
+    </section>
   </div>
 </section>
-
-<div id="actions">
-  <button id="attack">⚔️ Ataque</button>
-  <button id="skill">🔷 Corte espiritual</button>
-  <button id="guard">🛡️ Defender</button>
-</div>
-
-<div id="log" aria-live="polite">La criatura te observa. El combate comienza.</div>
-</div>
+</main>
 
 <script>
 (() => {
-  const hpBar = document.querySelector('#hp');
-  const enemyHpBar = document.querySelector('#enemyHp');
-  const hpText = document.querySelector('#hpText');
-  const enemyHpText = document.querySelector('#enemyHpText');
-  const log = document.querySelector('#log');
-  const turnText = document.querySelector('#turnText');
-  const player = document.querySelector('#player');
-  const buttons = [...document.querySelectorAll('#actions button')];
-
-  let hp = 100;
-  let enemyHp = 80;
-  let guarding = false;
-  let busy = false;
+  let hp=100, en=50, enemy=80, guarding=false, busy=false, potions=3;
+  const $=s=>document.querySelector(s);
+  const hpFill=$('#hpFill'), enFill=$('#enFill'), enemyFill=$('#enemyFill');
+  const hpText=$('#hpText'), enText=$('#enText'), enemyText=$('#enemyText'), turn=$('#turn'), log=$('#log');
+  const controls=[$('#attack'),$('#skill'),$('#guard'),$('#item')];
 
   function render(){
-    hpBar.style.width = hp + '%';
-    enemyHpBar.style.width = Math.max(0, enemyHp / 80 * 100) + '%';
-    hpText.textContent = `${hp} / 100`;
-    enemyHpText.textContent = `${Math.max(0,enemyHp)} / 80`;
+    hpFill.style.width=(hp)+'%';
+    enFill.style.width=(en*2)+'%';
+    enemyFill.style.width=(enemy/80*100)+'%';
+    hpText.textContent=`${hp} / 100`;
+    enText.textContent=`${en} / 50`;
+    enemyText.textContent=`${Math.max(0,enemy)} / 80`;
+    controls.forEach(b=>b.disabled=busy||hp<=0||enemy<=0);
   }
-
-  function lock(v){
-    busy = v;
-    buttons.forEach(b => b.disabled = v || hp <= 0 || enemyHp <= 0);
-  }
-
+  function message(text){log.innerHTML=text}
   function enemyTurn(){
-    if(enemyHp <= 0 || hp <= 0) return;
-    turnText.textContent = 'Turno enemigo';
-    setTimeout(() => {
-      let damage = Math.floor(Math.random()*8)+7;
-      if(guarding) damage = Math.floor(damage/2);
-      hp = Math.max(0, hp-damage);
-      guarding = false;
-      player.style.transform = 'translateX(-8px)';
-      setTimeout(()=>player.style.transform='',120);
-      log.textContent = `La criatura ataca a Spiren y causa ${damage} de daño.`;
+    if(enemy<=0||hp<=0)return;
+    turn.textContent='Turno enemigo';
+    setTimeout(()=>{
+      let dmg=Math.floor(Math.random()*8)+8;
+      if(guarding){dmg=Math.floor(dmg/2);guarding=false}
+      hp=Math.max(0,hp-dmg);
+      message(`El <b>Caracol Sombrío</b> ataca y causa <b>${dmg}</b> de daño.`);
+      if(hp<=0){
+        turn.textContent='Derrota';
+        message('<b>Spiren ha caído.</b><br>La sombra cubre el camino...');
+        busy=true;
+      }else{
+        turn.textContent='Tu turno';
+        busy=false;
+      }
       render();
-      turnText.textContent = hp > 0 ? 'Tu turno' : 'Derrota';
-      lock(false);
-    }, 550);
+    },550);
   }
-
   function action(type){
-    if(busy || hp<=0 || enemyHp<=0) return;
-    lock(true);
-
-    if(type === 'attack'){
-      const damage = Math.floor(Math.random()*7)+10;
-      enemyHp = Math.max(0,enemyHp-damage);
-      log.textContent = `Spiren golpea con su hoja y causa ${damage} de daño.`;
-      player.style.transform = 'translateX(10px) scale(1.03)';
+    if(busy||hp<=0||enemy<=0)return;
+    busy=true;
+    if(type==='attack'){
+      const dmg=Math.floor(Math.random()*7)+11;
+      enemy=Math.max(0,enemy-dmg);
+      message(`Spiren lanza un <b>ataque</b> y causa <b>${dmg}</b> de daño.`);
     }
-
-    if(type === 'skill'){
-      const damage = Math.floor(Math.random()*10)+16;
-      enemyHp = Math.max(0,enemyHp-damage);
-      log.textContent = `⚡ Corte espiritual: ${damage} de daño.`;
-      player.style.transform = 'translateX(18px) scale(1.06)';
+    if(type==='skill'){
+      if(en<15){message('No tienes suficiente <b>energía</b>.');busy=false;render();return}
+      en-=15;
+      const crit=Math.random()<.22, dmg=(Math.floor(Math.random()*10)+20)*(crit?2:1);
+      enemy=Math.max(0,enemy-dmg);
+      message(`🌙 <b>Corte espiritual</b>${crit?' — ¡CRÍTICO!':''}<br>Daño: <b>${dmg}</b>.`);
     }
-
-    if(type === 'guard'){
-      guarding = true;
-      log.textContent = 'Spiren adopta una postura defensiva. El próximo golpe hará la mitad de daño.';
+    if(type==='guard'){
+      guarding=true;
+      message('🛡️ <b>Defensa</b> activada. El próximo golpe recibirá un 50% menos de daño.');
     }
-
+    if(type==='item'){
+      if(potions<=0){message('No quedan <b>pociones</b>.');busy=false;render();return}
+      if(hp>=100){message('Tu PV ya está al máximo.');busy=false;render();return}
+      potions--;
+      hp=Math.min(100,hp+30);
+      message(`🧪 Usas una <b>Poción Pequeña</b> y recuperas 30 PV. Quedan ${potions}.`);
+    }
     render();
-
-    setTimeout(() => {
-      player.style.transform='';
-      if(enemyHp <= 0){
-        turnText.textContent='Victoria';
-        log.textContent='✨ Victoria. La criatura se desvanece entre las sombras.';
-        lock(false);
-        return;
+    setTimeout(()=>{
+      if(enemy<=0){
+        turn.textContent='Victoria';
+        message('✨ <b>¡Victoria!</b><br>El Caracol Sombrío se desvanece entre las sombras.');
+        busy=true;render();return;
       }
       enemyTurn();
-    }, 300);
+    },350);
   }
-
-  document.querySelector('#attack').addEventListener('click',()=>action('attack'));
-  document.querySelector('#skill').addEventListener('click',()=>action('skill'));
-  document.querySelector('#guard').addEventListener('click',()=>action('guard'));
+  $('#attack').addEventListener('click',()=>action('attack'));
+  $('#skill').addEventListener('click',()=>action('skill'));
+  $('#guard').addEventListener('click',()=>action('guard'));
+  $('#item').addEventListener('click',()=>action('item'));
   render();
 })();
 </script>

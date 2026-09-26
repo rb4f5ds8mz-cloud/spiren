@@ -32,8 +32,11 @@ body{display:grid;place-items:center}
 #enemyHpFill{position:absolute;left:72.1%;top:9.65%;width:17.25%;height:2.9%;z-index:4;pointer-events:none;background:#e92620;border-radius:5px;transform-origin:left center;}
 #enemyHpText{position:absolute;left:80.7%;top:9.55%;z-index:5;pointer-events:none;color:#fff;font:900 20px Arial,sans-serif;text-shadow:2px 2px 0 #000;transform:translateX(-50%);}
 #attack.locked{pointer-events:none;opacity:.7}
-@keyframes sceneAttack{0%{transform:translateX(0)}20%{transform:translateX(-4px)}45%{transform:translateX(5px)}70%{transform:translateX(-3px)}100%{transform:translateX(0)}}
-#art.sceneAttack{animation:sceneAttack .72s ease-out forwards}
+#attackLayer{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;opacity:0;pointer-events:none;z-index:2;display:block;will-change:opacity}
+@keyframes attackFadeIn{0%{opacity:0}100%{opacity:1}}
+@keyframes attackFadeOut{0%{opacity:1}100%{opacity:0}}
+#attackLayer.attackIn{animation:attackFadeIn .16s cubic-bezier(.2,.8,.2,1) forwards}
+#attackLayer.attackOut{animation:attackFadeOut .24s ease-in forwards}
 </style>
 </head>
 <body>
@@ -66,6 +69,12 @@ const attackBtn=document.getElementById('attack');
 const hpFill=document.getElementById('enemyHpFill');
 const hpText=document.getElementById('enemyHpText');
 
+const attackLayer=document.createElement('img');
+attackLayer.id='attackLayer';
+attackLayer.src=attackArt;
+attackLayer.alt='';
+document.getElementById('game').appendChild(attackLayer);
+
 function setHP(hp){
   enemyHP=Math.max(0,hp);
   hpFill.style.transform=`scaleX(${enemyHP/60})`;
@@ -77,24 +86,27 @@ attackBtn.addEventListener('click',()=>{
   attacking=true;
   attackBtn.classList.add('locked');
 
-  // Durante el golpe se muestra una única escena de ataque, sin duplicar el sprite.
-  art.src=attackArt;
-  art.classList.add('sceneAttack');
-  hpFill.style.visibility='hidden';
-  hpText.style.visibility='hidden';
+  // Preparación breve y entrada suave de la pose de ataque.
+  attackLayer.classList.remove('attackOut','attackIn');
+  void attackLayer.offsetWidth;
+  attackLayer.classList.add('attackIn');
 
+  // Impacto después de que el golpe haya entrado.
   setTimeout(()=>{
     setHP(enemyHP-15);
-  },520);
+  },430);
+
+  // Mantener el golpe un instante antes de retirarse.
+  setTimeout(()=>{
+    attackLayer.classList.remove('attackIn');
+    attackLayer.classList.add('attackOut');
+  },650);
 
   setTimeout(()=>{
-    art.classList.remove('sceneAttack');
-    art.src=baseArt;
-    hpFill.style.visibility='visible';
-    hpText.style.visibility='visible';
+    attackLayer.classList.remove('attackOut');
     attackBtn.classList.remove('locked');
     attacking=false;
-  },850);
+  },900);
 });
 </script>
 </body>

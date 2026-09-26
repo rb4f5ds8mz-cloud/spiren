@@ -77,6 +77,14 @@ sprite.id='attackSprite';
 sprite.alt='';
 sprite.draggable=false;
 game.appendChild(sprite);
+
+// Precargar todos los fotogramas antes de utilizarlos para evitar pantallas en blanco en iPhone/Safari.
+const frameImages=frames.map(src=>{
+  const img=new Image();
+  img.decoding='async';
+  img.src=src;
+  return img;
+});
 const smoke=document.createElement('img');
 smoke.id='attackSmoke';
 smoke.src=smokeSrc;
@@ -117,44 +125,55 @@ function hitEffect(){
 function wait(ms){return new Promise(r=>setTimeout(r,ms));}
 
 async function attackAnimation(){
-  const run=++attackRun;
+  if(attacking || enemyHP<=0) return;
+
   attacking=true;
   attackBtn.classList.add('locked');
-  game.classList.remove('attackRecover');
   game.classList.add('attacking');
   sprite.style.display='block';
   smoke.style.display='block';
-  hpFill.style.visibility='visible';
-  hpText.style.visibility='visible';
 
-  // 1-4: anticipation — the body settles before the dash.
-  showFrame(0,0,0,1.00); await wait(105);
-  showFrame(1,8,2,1.01); await wait(90);
-  showFrame(2,28,4,1.02); await wait(80);
-  showFrame(3,58,3,1.03); await wait(65);
+  // Esperamos a que el primer frame esté disponible. Los demás ya se están precargando.
+  if(!frameImages[0].complete){
+    await new Promise(resolve=>{
+      frameImages[0].onload=resolve;
+      frameImages[0].onerror=resolve;
+    });
+  }
 
-  // 5-6: actual lunge. The displacement is progressive, not a teleport.
-  showFrame(4,250,-2,1.04); await wait(80);
-  showFrame(5,510,-5,1.02); await wait(95);
+  // frame, duración(ms), desplazamiento X, escala
+  const sequence=[
+    [0,120,0,1.00],   // reposo
+    [1,95,10,1.01],   // preparación
+    [2,80,28,1.02],   // impulso
+    [3,65,58,1.03],   // salida
+    [4,75,190,1.04],  // carrera
+    [5,75,365,1.03],  // ataque
+    [6,90,470,1.01],  // impacto
+    [7,105,230,1.00], // recuperación
+    [8,115,75,1.00],  // regreso
+    [0,90,0,1.00]     // reposo
+  ];
 
-  // Impact at the end of the forward motion.
-  if(run!==attackRun) return;
-  setHP(enemyHP-15);
-  hitEffect();
-  await wait(85);
+  for(const [frame,duration,x,scale] of sequence){
+    sprite.src=frameImages[frame].src;
+    sprite.style.left=(250+x)+'px';
+    sprite.style.top=(410+(frame===5?-5:frame===6?0:2))+'px';
+    sprite.style.transform='scale('+scale+')';
 
-  // 7-8: deceleration and return to the exact starting pose.
-  showFrame(6,250,0,1.01); await wait(95);
-  showFrame(7,75,2,1.00); await wait(110);
-  showFrame(0,0,0,1.00); await wait(75);
+    // El daño y el efecto visual ocurren justo en el contacto.
+    if(frame===6){
+      setHP(enemyHP-15);
+      hitEffect();
+    }
+
+    await wait(duration);
+  }
 
   sprite.style.display='none';
-  game.classList.remove('attacking');
-  game.classList.add('attackRecover');
-  await wait(240);
-  game.classList.remove('attackRecover');
   smoke.style.display='none';
   slash.style.display='none';
+  game.classList.remove('attacking');
   attackBtn.classList.remove('locked');
   attacking=false;
 }

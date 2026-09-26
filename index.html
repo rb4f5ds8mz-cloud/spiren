@@ -98,12 +98,9 @@ body{display:flex;justify-content:center}
 }
 .hero{left:5%;width:48%;max-width:330px}
 .foe{right:5%;width:39%;max-width:280px}
-.hero img{
-  width:100%;max-height:250px;object-fit:contain;
+.hero .spiren-svg{
+  width:100%;height:auto;max-height:285px;display:block;
   filter:drop-shadow(0 18px 12px #000);
-}
-.hero-fallback{
-  display:none;color:#fff;text-align:center;font-size:90px;
 }
 .foe-body{
   width:min(190px,100%);aspect-ratio:1/.95;margin:auto;
@@ -181,21 +178,75 @@ body{display:flex;justify-content:center}
 .skill-row strong,.item-row strong{font-size:12px}.muted{font-size:10px;color:#8996ad}
 
 @media(max-width:520px){
-  .top{align-items:flex-start}.logo{font-size:28px}.subtitle{font-size:9px}
-  .nav button{width:50px;min-height:50px}.nav .ico{font-size:18px}
-  .battle{min-height:510px}
+  .top{align-items:flex-start;padding:10px 9px}.logo{font-size:27px}.subtitle{font-size:8px;letter-spacing:.7px;max-width:190px;overflow:hidden}
+  .nav{gap:4px}.nav button{width:47px;min-height:48px;font-size:9px}.nav .ico{font-size:18px}
+  .battle{min-height:525px}
   .card{top:10px;padding:8px;width:46%}.card-title{font-size:12px}
   .hero{bottom:13%;left:2%;width:52%}.foe{bottom:16%;right:1%;width:38%}
-  .hero img{max-height:205px}.foe-body{max-width:145px}
+  .hero .spiren-svg{max-height:235px}.foe-body{max-width:145px}
   .torii{transform:scale(.72);transform-origin:left bottom}
   .castle{font-size:40px}
   .actions{grid-template-columns:repeat(2,1fr)}
   .action{min-height:72px}
   .extra{grid-template-columns:1fr}
 }
+
+/* ===== LANDSCAPE / RESPONSIVE iPHONE LAYOUT ===== */
+.rotate-warning{display:none}
+@media (orientation:landscape){
+  html,body{width:100%;height:100%;overflow:hidden}
+  body{display:flex;align-items:center;justify-content:center}
+  .game{
+    width:100vw;height:100vh;max-width:none;min-height:0;
+    aspect-ratio:auto;overflow:hidden;
+  }
+  .top{height:12vh;min-height:0;padding:1.2vh 1.5vw;gap:1vw}
+  .logo{font-size:clamp(22px,5vh,38px)}
+  .subtitle{font-size:clamp(7px,1.8vh,11px);margin-top:.8vh}
+  .nav{gap:.6vw}
+  .nav button{width:clamp(48px,8vw,72px);min-height:0;height:9vh;padding:.6vh .2vw;border-radius:10px;font-size:clamp(7px,1.8vh,10px)}
+  .nav .ico{font-size:clamp(15px,3.2vh,24px);margin-bottom:0}
+
+  .battle{height:58vh;min-height:0}
+  .card{top:1.5vh;width:34%;padding:1vh 1vw;border-radius:10px}
+  .player-card{left:1vw}.enemy-card{right:1vw}
+  .card-title{font-size:clamp(9px,2.4vh,16px);margin-bottom:.6vh}
+  .bar{height:1.5vh;min-height:6px}
+  .numbers{font-size:clamp(7px,1.7vh,11px);margin-top:.25vh}
+  .hero{left:8%;bottom:7%;width:40%;max-width:none}
+  .foe{right:7%;bottom:9%;width:25%;max-width:none}
+  .hero img{max-height:38vh;width:100%;object-fit:contain}
+  .foe-body{width:min(18vw,25vh);max-width:none}
+  .castle{font-size:clamp(30px,7vh,54px);bottom:32%}
+  .torii{transform:scale(.75);transform-origin:left bottom;bottom:25%}
+  .lantern{bottom:25%;font-size:clamp(18px,5vh,30px)}
+  .path{height:30%}
+
+  .bottom{height:30vh;min-height:0;padding:1vh 1vw calc(1vh + env(safe-area-inset-bottom));overflow:hidden}
+  .actions{grid-template-columns:repeat(4,1fr);gap:.7vw;height:14vh}
+  .action{min-height:0;height:14vh;padding:.5vh .3vw;border-radius:10px}
+  .action .big{font-size:clamp(17px,4vh,30px);margin-bottom:0}
+  .action small{font-size:clamp(6px,1.5vh,9px)}
+  .log{margin-top:.7vh;padding:.7vh 1vw;min-height:0;height:8vh;font-size:clamp(8px,1.8vh,13px);overflow:hidden}
+  .extra{display:none}
+}
+@media (orientation:portrait){
+  body{overflow:hidden}
+  .game{display:none}
+  .rotate-warning{
+    position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    flex-direction:column;text-align:center;padding:30px;
+    background:radial-gradient(circle at 50% 35%,#172945,#03060d 65%);z-index:9999
+  }
+  .rotate-warning .phone{font-size:64px;transform:rotate(90deg);margin-bottom:18px}
+  .rotate-warning h1{margin:0 0 8px;font-size:26px}
+  .rotate-warning p{margin:0;color:#aeb9cd;font-size:14px;max-width:300px}
+}
+
 </style>
 </head>
 <body>
+<div class="rotate-warning"><div class="phone">📱</div><h1>Gira el iPhone</h1><p>SPIREN está diseñado para jugarse en horizontal.</p></div>
 <main class="game">
 <header class="top">
   <div class="brand">
@@ -229,9 +280,35 @@ body{display:flex;justify-content:center}
   </section>
 
   <div class="shadow shero"></div><div class="shadow sfoe"></div>
-  <div class="hero">
-    <img src="player.png" alt="Spiren" onerror="this.style.display='none';document.querySelector('.hero-fallback').style.display='block'">
-    <div class="hero-fallback">🥷</div>
+  <div class="hero" aria-label="Spiren">
+    <svg class="spiren-svg" viewBox="0 0 220 270" role="img" aria-label="Spiren">
+      <defs>
+        <linearGradient id="hair" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".65" stop-color="#c6cbd8"/><stop offset="1" stop-color="#777f92"/></linearGradient>
+        <linearGradient id="cloth" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b3140"/><stop offset="1" stop-color="#090d15"/></linearGradient>
+        <linearGradient id="red" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5967"/><stop offset="1" stop-color="#8c1025"/></linearGradient>
+      </defs>
+      <ellipse cx="108" cy="252" rx="72" ry="13" fill="#0009"/>
+      <path d="M65 108 Q105 91 147 111 L158 190 Q139 216 109 215 Q77 214 58 190Z" fill="url(#cloth)" stroke="#050811" stroke-width="6"/>
+      <path d="M67 112 Q105 126 145 111 L139 145 Q106 158 72 142Z" fill="#111722" stroke="#454b5b" stroke-width="3"/>
+      <path d="M82 139 L139 176 L130 190 L75 153Z" fill="url(#red)" stroke="#65152a" stroke-width="3"/>
+      <path d="M72 173 Q109 185 145 171 L149 194 Q109 207 67 191Z" fill="#171d29" stroke="#050811" stroke-width="4"/>
+      <rect x="101" y="169" width="18" height="15" rx="3" fill="#d0a44d" stroke="#6c4d1d" stroke-width="3"/>
+      <path d="M63 130 Q43 154 57 184 L77 176 L76 139Z" fill="url(#cloth)" stroke="#050811" stroke-width="5"/>
+      <path d="M144 130 Q169 151 157 181 L138 175 L138 139Z" fill="url(#cloth)" stroke="#050811" stroke-width="5"/>
+      <path d="M70 190 L61 237 L91 237 L103 193Z" fill="#111722" stroke="#050811" stroke-width="6"/>
+      <path d="M142 190 L153 237 L124 237 L109 194Z" fill="#111722" stroke="#050811" stroke-width="6"/>
+      <path d="M58 237 L92 237 L96 248 L52 248Z" fill="#242b39" stroke="#050811" stroke-width="5"/>
+      <path d="M123 237 L157 237 L164 248 L119 248Z" fill="#242b39" stroke="#050811" stroke-width="5"/>
+      <path d="M72 104 Q74 63 109 55 Q145 62 147 105 L132 127 L86 127Z" fill="#d2a177" stroke="#060911" stroke-width="6"/>
+      <path d="M73 91 Q64 48 107 27 Q151 40 148 91 L133 72 L124 87 L111 67 L96 84 L87 67Z" fill="url(#hair)" stroke="#555d6d" stroke-width="5"/>
+      <path d="M78 88 Q108 73 143 89 L140 105 Q110 92 80 105Z" fill="#121722"/>
+      <circle cx="96" cy="98" r="4" fill="#f2b83f"/><circle cx="126" cy="98" r="4" fill="#f2b83f"/>
+      <path d="M95 111 Q109 117 125 110" fill="none" stroke="#7b432e" stroke-width="3"/>
+      <path d="M70 116 Q35 101 18 75 Q14 68 20 64 Q41 80 78 88Z" fill="url(#red)" stroke="#5f1022" stroke-width="4"/>
+      <path d="M154 151 L207 101" stroke="#dce8ff" stroke-width="7" stroke-linecap="round"/>
+      <path d="M202 96 L214 90 L208 104Z" fill="#8ea5c5"/>
+      <path d="M151 151 L157 157" stroke="#8a6a3a" stroke-width="10"/>
+    </svg>
   </div>
   <div class="foe">
     <div class="foe-body"><div class="eyes">● ●</div><div class="mouth">⌣</div></div>

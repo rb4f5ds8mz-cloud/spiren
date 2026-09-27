@@ -32,6 +32,7 @@ body{display:grid;place-items:center}
 #enemyHpFill{position:absolute;left:72.1%;top:9.65%;width:17.25%;height:2.9%;z-index:4;pointer-events:none;background:#e92620;border-radius:5px;transform-origin:left center;}
 #enemyHpText{position:absolute;left:80.7%;top:9.55%;z-index:5;pointer-events:none;color:#fff;font:900 20px Arial,sans-serif;text-shadow:2px 2px 0 #000;transform:translateX(-50%);}
 #attack.locked{pointer-events:none;opacity:.7}
+#attackCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none;display:none;image-rendering:auto}
 #attackSprite{position:absolute;left:250px;top:410px;width:330px;height:330px;object-fit:contain;z-index:3;pointer-events:none;display:none;image-rendering:auto;will-change:transform,opacity}
 #attackSmoke{position:absolute;left:230px;top:415px;width:370px;height:320px;object-fit:fill;z-index:2;pointer-events:none;display:none;opacity:0;will-change:opacity,transform}
 #attackSlash{position:absolute;width:260px;height:200px;object-fit:contain;z-index:4;pointer-events:none;display:none;opacity:0;will-change:opacity,transform}
@@ -78,7 +79,16 @@ sprite.alt='';
 sprite.draggable=false;
 game.appendChild(sprite);
 
-// Precargar todos los fotogramas antes de utilizarlos para evitar pantallas en blanco en iPhone/Safari.
+// Capa Canvas para la animación: evita que Safari agrupe los cambios de src/posición
+// y garantiza un fotograma visible en cada repaint.
+const attackCanvas=document.createElement('canvas');
+attackCanvas.id='attackCanvas';
+attackCanvas.width=1672;
+attackCanvas.height=940;
+game.appendChild(attackCanvas);
+const attackCtx=attackCanvas.getContext('2d');
+attackCtx.imageSmoothingEnabled=true;
+
 const frameImages=frames.map(src=>{
   const img=new Image();
   img.decoding='async';
@@ -106,13 +116,6 @@ function setHP(hp){
   hpText.textContent=`${enemyHP}/60`;
 }
 
-function showFrame(i,x,y,scale=1){
-  sprite.src=frames[i];
-  sprite.style.left=`${250 + x}px`;
-  sprite.style.top=`${410 + y}px`;
-  sprite.style.transform=`scale(${scale})`;
-}
-
 function hitEffect(){
   slash.style.left='1080px';
   slash.style.top='485px';
@@ -123,59 +126,76 @@ function hitEffect(){
 }
 
 function wait(ms){return new Promise(r=>setTimeout(r,ms));}
+function allFramesReady(){return Promise.all(frameImages.map(img=>img.complete ? Promise.resolve() : new Promise(resolve=>{img.onload=resolve;img.onerror=resolve;})));}
 
 async function attackAnimation(){
   if(attacking || enemyHP<=0) return;
-
   attacking=true;
   attackBtn.classList.add('locked');
-  game.classList.add('attacking');
-  sprite.style.display='block';
+  attackCanvas.style.display='block';
   smoke.style.display='block';
+  sprite.style.display='none';
 
-  // Esperamos a que el primer frame esté disponible. Los demás ya se están precargando.
-  if(!frameImages[0].complete){
-    await new Promise(resolve=>{
-      frameImages[0].onload=resolve;
-      frameImages[0].onerror=resolve;
-    });
-  }
-
-  // frame, duración(ms), desplazamiento X, escala
-  // Secuencia de 8 fotogramas reales (0-7).
-  // Los tiempos son deliberadamente más largos para que el movimiento
-  // sea claramente visible también en iPhone/Safari.
-  const sequence=[
-    [0,220,0,1.00],    // reposo
-    [1,180,12,1.01],   // preparación
-    [2,160,35,1.03],   // impulso
-    [3,140,75,1.05],   // salida
-    [4,260,230,1.07],  // carrera
-    [5,300,430,1.08],  // golpe
-    [6,220,500,1.03],  // impacto
-    [7,280,220,1.00],  // recuperación
-    [0,240,0,1.00]     // vuelta al reposo
+  await allFramesReady();
+  const W=1672,H=940;
+  const size=330;
+  const startX=250;
+  const startY=410;
+  const keyframes=[
+    {f:0,x:0,y:0,s:1.00,d:170},
+    {f:1,x:18,y:-2,s:1.01,d:150},
+    {f:2,x:55,y:-4,s:1.03,d:130},
+    {f:3,x:105,y:-2,s:1.05,d:120},
+    {f:4,x:245,y:-4,s:1.07,d:210},
+    {f:5,x:410,y:-8,s:1.08,d:220},
+    {f:6,x:475,y:0,s:1.04,d:170},
+    {f:7,x:230,y:2,s:1.00,d:220},
+    {f:0,x:0,y:0,s:1.00,d:260}
   ];
 
-  for(const [frame,duration,x,scale] of sequence){
-    sprite.src=frameImages[frame].src;
-    sprite.style.left=(250+x)+'px';
-    sprite.style.top=(410+(frame===5?-5:frame===6?0:2))+'px';
-    sprite.style.transform='scale('+scale+')';
+  const total=keyframes.reduce((a,k)=>a+k.d,0);
+  const t0=performance.now();
+  let lastHit=false;
 
-    // El daño y el efecto visual ocurren justo en el contacto.
-    if(frame===6){
-      setHP(enemyHP-15);
-      hitEffect();
+  await new Promise(resolve=>{
+    function draw(now){
+      const elapsed=now-t0;
+      let acc=0, a=keyframes[0], b=keyframes[0];
+      for(let i=0;i<keyframes.length;i++){
+        const next=acc+keyframes[i].d;
+        if(elapsed<=next){a=keyframes[i]; b=keyframes[Math.min(i+1,keyframes.length-1)]; break;}
+        acc=next;
+      }
+      const p=b===a?1:Math.max(0,Math.min(1,(elapsed-acc)/a.d));
+      const ease=p*p*(3-2*p);
+      const x=a.x+(b.x-a.x)*ease;
+      const y=a.y+(b.y-a.y)*ease;
+      const s=a.s+(b.s-a.s)*ease;
+
+      attackCtx.clearRect(0,0,W,H);
+      const img=frameImages[a.f];
+      const dw=size*s, dh=size*s;
+      attackCtx.drawImage(img,startX+x,startY+y,dw,dh);
+
+      if(!lastHit && elapsed>=1050){
+        lastHit=true;
+        setHP(enemyHP-15);
+        hitEffect();
+      }
+
+      if(elapsed<total){
+        requestAnimationFrame(draw);
+      }else{
+        attackCtx.clearRect(0,0,W,H);
+        resolve();
+      }
     }
+    requestAnimationFrame(draw);
+  });
 
-    await wait(duration);
-  }
-
-  sprite.style.display='none';
+  attackCanvas.style.display='none';
   smoke.style.display='none';
   slash.style.display='none';
-  game.classList.remove('attacking');
   attackBtn.classList.remove('locked');
   attacking=false;
 }

@@ -285,95 +285,169 @@ function rock(x,y,s=1){
 }
 
 function house(x,y,s=1,roof="#b75b4d"){
-  ctx.save();ctx.translate(x,y);ctx.scale(s,s);
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(s,s);
 
-  // Sombra proyectada
-  ctx.fillStyle="rgba(32,49,35,.24)";
-  ctx.beginPath();ctx.ellipse(10,72,122,30,-.04,0,Math.PI*2);ctx.fill();
+  // Ground shadow
+  ctx.fillStyle="rgba(30,45,32,.24)";
+  ctx.beginPath();
+  ctx.ellipse(8,70,112,28,-.05,0,Math.PI*2);
+  ctx.fill();
 
-  // Cuerpo con perspectiva: frente + lateral derecho
-  const wall=ctx.createLinearGradient(-82,-10,78,70);
-  wall.addColorStop(0,"#f7e0b4");
-  wall.addColorStop(.6,"#e3c28b");
-  wall.addColorStop(1,"#c59665");
+  // Main front wall — clean trapezoid
+  const wall=ctx.createLinearGradient(-70,-15,55,68);
+  wall.addColorStop(0,"#f6dfb2");
+  wall.addColorStop(.65,"#e5c48f");
+  wall.addColorStop(1,"#cda06d");
   ctx.fillStyle=wall;
   ctx.beginPath();
-  ctx.moveTo(-82,-10);ctx.lineTo(55,-10);ctx.lineTo(82,3);
-  ctx.lineTo(82,66);ctx.lineTo(-82,66);ctx.closePath();ctx.fill();
+  ctx.moveTo(-72,-12);
+  ctx.lineTo(42,-12);
+  ctx.lineTo(42,62);
+  ctx.lineTo(-72,62);
+  ctx.closePath();
+  ctx.fill();
 
-  // Fachada frontal
-  ctx.fillStyle="#efd4a1";
+  // Right side wall, clearly separated
+  const side=ctx.createLinearGradient(42,-10,83,60);
+  side.addColorStop(0,"#c99a69");
+  side.addColorStop(1,"#9e724f");
+  ctx.fillStyle=side;
   ctx.beginPath();
-  ctx.moveTo(-82,-10);ctx.lineTo(0,-66);ctx.lineTo(55,-10);
-  ctx.lineTo(55,66);ctx.lineTo(-82,66);ctx.closePath();ctx.fill();
+  ctx.moveTo(42,-12);
+  ctx.lineTo(80,4);
+  ctx.lineTo(80,60);
+  ctx.lineTo(42,62);
+  ctx.closePath();
+  ctx.fill();
 
-  // Lateral derecho en sombra
-  ctx.fillStyle="rgba(112,76,51,.20)";
+  // Wooden beams on facade
+  ctx.strokeStyle="rgba(117,78,49,.34)";
+  ctx.lineWidth=4;
   ctx.beginPath();
-  ctx.moveTo(55,-10);ctx.lineTo(82,3);ctx.lineTo(82,66);ctx.lineTo(55,66);ctx.closePath();ctx.fill();
+  ctx.moveTo(-72,17);ctx.lineTo(42,17);
+  ctx.moveTo(-72,44);ctx.lineTo(42,44);
+  ctx.stroke();
 
-  // Zócalo
-  ctx.fillStyle="rgba(105,77,56,.25)";
-  for(let i=0;i<7;i++){roundedRect(-70+i*20,51,16,10,3);ctx.fill();}
-  ctx.fillStyle="rgba(90,67,51,.20)";
-  for(let i=0;i<2;i++){roundedRect(61,15+i*19,13,10,3);ctx.fill();}
+  // Base stones
+  ctx.fillStyle="rgba(100,77,57,.28)";
+  for(let i=0;i<6;i++){
+    roundedRect(-63+i*18,51,14,9,3);ctx.fill();
+  }
 
-  // Tejado con perspectiva
-  ctx.fillStyle="#713c37";
+  // Roof: back/lower shadow first
+  ctx.fillStyle="#713b35";
   ctx.beginPath();
-  ctx.moveTo(-101,-9);ctx.lineTo(0,-88);ctx.lineTo(91,-22);
-  ctx.lineTo(99,-7);ctx.lineTo(0,-64);ctx.lineTo(-91,7);ctx.closePath();ctx.fill();
+  ctx.moveTo(-91,-7);
+  ctx.lineTo(0,-78);
+  ctx.lineTo(94,-18);
+  ctx.lineTo(86,-1);
+  ctx.lineTo(0,-58);
+  ctx.lineTo(-84,9);
+  ctx.closePath();
+  ctx.fill();
 
-  // Superficie del tejado
-  ctx.fillStyle=roof;
+  // Main roof plane
+  const roofGrad=ctx.createLinearGradient(-50,-70,65,-15);
+  roofGrad.addColorStop(0,roof);
+  roofGrad.addColorStop(.65,roof);
+  roofGrad.addColorStop(1,"#87433f");
+  ctx.fillStyle=roofGrad;
   ctx.beginPath();
-  ctx.moveTo(-92,-10);ctx.lineTo(0,-80);ctx.lineTo(87,-19);
-  ctx.lineTo(78,-7);ctx.lineTo(0,-62);ctx.lineTo(-82,2);ctx.closePath();ctx.fill();
+  ctx.moveTo(-84,-9);
+  ctx.lineTo(0,-76);
+  ctx.lineTo(86,-19);
+  ctx.lineTo(78,-7);
+  ctx.lineTo(0,-60);
+  ctx.lineTo(-76,2);
+  ctx.closePath();
+  ctx.fill();
 
-  // Tejas en profundidad
-  ctx.strokeStyle="rgba(91,48,43,.48)";ctx.lineWidth=3;
-  for(let i=-4;i<=4;i++){
+  // Roof ridge highlight
+  ctx.strokeStyle="rgba(255,220,190,.25)";
+  ctx.lineWidth=3;
+  ctx.beginPath();
+  ctx.moveTo(-77,-9);ctx.lineTo(0,-70);ctx.lineTo(78,-18);
+  ctx.stroke();
+
+  // Roof tiles following perspective
+  ctx.strokeStyle="rgba(86,45,42,.48)";
+  ctx.lineWidth=2.5;
+  for(let i=-3;i<=3;i++){
+    const xx=i*18;
     ctx.beginPath();
-    ctx.moveTo(i*17,-18-Math.abs(i)*8);
-    ctx.lineTo(i*17+4,-13-Math.abs(i)*8);
+    ctx.moveTo(xx,-18-Math.abs(i)*7);
+    ctx.lineTo(xx+5,-14-Math.abs(i)*7);
     ctx.stroke();
   }
 
-  // Chimenea en perspectiva
-  ctx.fillStyle="#9f5849";
+  // Chimney, behind roof
+  ctx.fillStyle="#8e4e42";
   ctx.beginPath();
-  ctx.moveTo(38,-62);ctx.lineTo(53,-70);ctx.lineTo(53,-29);ctx.lineTo(38,-24);ctx.closePath();ctx.fill();
-  ctx.fillStyle="#764039";roundedRect(35,-72,22,7,3);ctx.fill();
+  ctx.moveTo(35,-58);ctx.lineTo(51,-68);ctx.lineTo(51,-29);ctx.lineTo(35,-23);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle="#653a34";
+  roundedRect(33,-70,21,7,3);ctx.fill();
 
-  // Puerta
-  const door=ctx.createLinearGradient(-17,18,18,66);
-  door.addColorStop(0,"#82543b");door.addColorStop(1,"#51352a");
-  ctx.fillStyle=door;roundedRect(-18,18,36,49,6);ctx.fill();
-  ctx.fillStyle="#d8b45d";ctx.beginPath();ctx.arc(8,44,3,0,Math.PI*2);ctx.fill();
+  // Door with frame
+  ctx.fillStyle="#65412f";
+  roundedRect(-19,13,39,51,6);ctx.fill();
+  const door=ctx.createLinearGradient(-15,17,16,62);
+  door.addColorStop(0,"#89583e");
+  door.addColorStop(1,"#523429");
+  ctx.fillStyle=door;
+  roundedRect(-15,17,31,47,4);ctx.fill();
+  ctx.fillStyle="#d7b45f";
+  ctx.beginPath();ctx.arc(8,41,3,0,Math.PI*2);ctx.fill();
 
-  // Ventanas con marcos y reflejos
+  // Windows — only on front facade
   function windowBox(wx){
-    ctx.fillStyle="#624238";roundedRect(wx,0,34,32,6);ctx.fill();
-    ctx.fillStyle="#91cbd3";roundedRect(wx+4,4,26,24,4);ctx.fill();
-    ctx.strokeStyle="rgba(255,255,255,.65)";ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(wx+17,4);ctx.lineTo(wx+17,28);ctx.moveTo(wx+4,16);ctx.lineTo(wx+30,16);ctx.stroke();
-    ctx.fillStyle="rgba(255,255,255,.30)";
-    ctx.beginPath();ctx.moveTo(wx+7,7);ctx.lineTo(wx+17,7);ctx.lineTo(wx+7,17);ctx.closePath();ctx.fill();
+    ctx.fillStyle="#68463a";
+    roundedRect(wx,0,32,29,5);ctx.fill();
+    ctx.fillStyle="#8fcbd4";
+    roundedRect(wx+4,4,24,21,3);ctx.fill();
+
+    ctx.strokeStyle="rgba(255,255,255,.62)";
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(wx+16,4);ctx.lineTo(wx+16,25);
+    ctx.moveTo(wx+4,14.5);ctx.lineTo(wx+28,14.5);
+    ctx.stroke();
+
+    ctx.fillStyle="rgba(255,255,255,.28)";
+    ctx.beginPath();
+    ctx.moveTo(wx+6,6);ctx.lineTo(wx+16,6);ctx.lineTo(wx+6,16);ctx.closePath();
+    ctx.fill();
   }
-  windowBox(-62);windowBox(27);
+  windowBox(-61);
+  windowBox(25);
 
-  // Ventana lateral
-  ctx.fillStyle="#594039";roundedRect(60,7,16,27,4);ctx.fill();
-  ctx.fillStyle="#88c2ca";roundedRect(63,10,10,21,3);ctx.fill();
+  // Side window — aligned to side plane
+  ctx.fillStyle="#5c4036";
+  ctx.beginPath();
+  ctx.moveTo(53,4);ctx.lineTo(70,10);ctx.lineTo(70,34);ctx.lineTo(53,31);ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle="#87c3cc";
+  ctx.beginPath();
+  ctx.moveTo(56,8);ctx.lineTo(67,12);ctx.lineTo(67,30);ctx.lineTo(56,28);ctx.closePath();
+  ctx.fill();
 
-  // Farol y pequeño volumen lateral
-  ctx.fillStyle="#60412f";ctx.fillRect(75,4,4,45);
-  ctx.fillStyle="#f5d77d";ctx.beginPath();ctx.arc(77,4,7,0,Math.PI*2);ctx.fill();
+  // Small wall lamp
+  ctx.fillStyle="#5b402e";
+  ctx.fillRect(75,5,4,42);
+  ctx.fillStyle="#f5d77d";
+  ctx.beginPath();ctx.arc(77,5,7,0,Math.PI*2);ctx.fill();
 
-  // Barril lateral
-  ctx.fillStyle="#71472f";ctx.beginPath();ctx.ellipse(94,52,13,17,0,0,Math.PI*2);ctx.fill();
+  // Barrel on the right, partly behind the house
+  ctx.fillStyle="#71472f";
+  ctx.beginPath();ctx.ellipse(93,51,12,16,0,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle="#4e3427";ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(84,47);ctx.lineTo(104,47);ctx.moveTo(84,57);ctx.lineTo(104,57);ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(84,45);ctx.lineTo(103,45);
+  ctx.moveTo(84,55);ctx.lineTo(103,55);
+  ctx.stroke();
 
   ctx.restore();
 }

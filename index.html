@@ -115,6 +115,8 @@ function drawLake(){
   const x=2150,y=300,w=720,h=520;
   ctx.save();
   ctx.shadowColor="rgba(23,70,100,.25)";ctx.shadowBlur=30;
+  ctx.fillStyle="rgba(34,91,105,.18)";
+  ctx.beginPath();ctx.ellipse(x+w/2+8,y+h/2+18,w/2+18,h/2+18,.08,0,Math.PI*2);ctx.fill();
   ctx.fillStyle="#4daed0";
   ctx.beginPath();
   ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0.08,0,Math.PI*2);ctx.fill();
@@ -129,16 +131,77 @@ function drawLake(){
 
 function tree(x,y,s=1){
   ctx.save();ctx.translate(x,y);ctx.scale(s,s);
-  // sombra
-  ctx.fillStyle="rgba(30,70,35,.18)";
-  ctx.beginPath();ctx.ellipse(0,42,52,20,0,0,Math.PI*2);ctx.fill();
-  // tronco
-  ctx.fillStyle="#85563a"; roundedRect(-13,-5,26,58,9);ctx.fill();
-  // copa
-  ctx.fillStyle="#3d9c55";
-  ctx.beginPath();ctx.arc(-25,-20,34,0,Math.PI*2);ctx.arc(18,-25,39,0,Math.PI*2);ctx.arc(0,-55,43,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle="#67bd68";
-  ctx.beginPath();ctx.arc(-12,-52,24,0,Math.PI*2);ctx.arc(25,-42,21,0,Math.PI*2);ctx.fill();
+
+  // Sombra de contacto
+  ctx.fillStyle="rgba(25,55,30,.22)";
+  ctx.beginPath();ctx.ellipse(3,48,58,20,-.08,0,Math.PI*2);ctx.fill();
+
+  // Raíces
+  ctx.fillStyle="#68452f";
+  ctx.beginPath();
+  ctx.moveTo(-14,32);ctx.quadraticCurveTo(-37,43,-48,48);
+  ctx.quadraticCurveTo(-28,50,-8,39);
+  ctx.moveTo(11,32);ctx.quadraticCurveTo(33,44,48,46);
+  ctx.quadraticCurveTo(29,49,7,39);ctx.fill();
+
+  // Tronco principal
+  const trunk=ctx.createLinearGradient(-18,0,20,0);
+  trunk.addColorStop(0,"#67432e");
+  trunk.addColorStop(.42,"#9a6841");
+  trunk.addColorStop(.7,"#b47a4a");
+  trunk.addColorStop(1,"#70472f");
+  ctx.fillStyle=trunk;
+  ctx.beginPath();
+  ctx.moveTo(-17,35);ctx.quadraticCurveTo(-13,5,-20,-18);
+  ctx.quadraticCurveTo(-7,-27,2,-19);
+  ctx.quadraticCurveTo(10,3,17,35);
+  ctx.closePath();ctx.fill();
+
+  // Ramas
+  ctx.strokeStyle="#74492f";ctx.lineWidth=9;ctx.lineCap="round";
+  ctx.beginPath();ctx.moveTo(-3,3);ctx.lineTo(-29,-25);ctx.lineTo(-45,-34);
+  ctx.moveTo(5,1);ctx.lineTo(27,-27);ctx.lineTo(43,-37);ctx.stroke();
+
+  // Corteza
+  ctx.strokeStyle="rgba(63,38,27,.38)";ctx.lineWidth=2.2;
+  ctx.beginPath();
+  ctx.moveTo(-9,-9);ctx.lineTo(-6,26);
+  ctx.moveTo(5,-7);ctx.lineTo(10,27);
+  ctx.moveTo(-1,-2);ctx.lineTo(3,17);
+  ctx.stroke();
+
+  // Copa trasera
+  ctx.fillStyle="#277b48";
+  ctx.beginPath();
+  ctx.arc(-31,-30,31,0,Math.PI*2);
+  ctx.arc(0,-49,43,0,Math.PI*2);
+  ctx.arc(34,-29,34,0,Math.PI*2);
+  ctx.fill();
+
+  // Copa media
+  ctx.fillStyle="#3f9d55";
+  ctx.beginPath();
+  ctx.arc(-27,-45,27,0,Math.PI*2);
+  ctx.arc(2,-65,35,0,Math.PI*2);
+  ctx.arc(30,-48,28,0,Math.PI*2);
+  ctx.arc(0,-29,35,0,Math.PI*2);
+  ctx.fill();
+
+  // Hojas iluminadas
+  ctx.fillStyle="#72c76a";
+  ctx.beginPath();
+  ctx.arc(-18,-64,15,0,Math.PI*2);
+  ctx.arc(7,-76,18,0,Math.PI*2);
+  ctx.arc(28,-55,13,0,Math.PI*2);
+  ctx.arc(-4,-42,14,0,Math.PI*2);
+  ctx.fill();
+
+  // Detalles de hoja
+  ctx.fillStyle="rgba(255,255,210,.20)";
+  for(let i=0;i<7;i++){
+    const a=i*1.7;
+    ctx.beginPath();ctx.arc(Math.cos(a)*25, -48+Math.sin(a)*24, 3.5,0,Math.PI*2);ctx.fill();
+  }
   ctx.restore();
 }
 
@@ -153,25 +216,111 @@ function bush(x,y,s=1){
 
 function rock(x,y,s=1){
   ctx.save();ctx.translate(x,y);ctx.scale(s,s);
-  ctx.fillStyle="rgba(30,50,35,.15)";
-  ctx.beginPath();ctx.ellipse(0,13,28,10,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle="#87969a";
-  ctx.beginPath();ctx.moveTo(-27,8);ctx.lineTo(-20,-14);ctx.lineTo(2,-25);ctx.lineTo(25,-12);ctx.lineTo(29,9);ctx.lineTo(10,18);ctx.closePath();ctx.fill();
-  ctx.fillStyle="#aab7b9";
-  ctx.beginPath();ctx.moveTo(-18,-12);ctx.lineTo(2,-20);ctx.lineTo(12,-10);ctx.lineTo(-4,-5);ctx.closePath();ctx.fill();
+
+  ctx.fillStyle="rgba(30,45,35,.20)";
+  ctx.beginPath();ctx.ellipse(3,15,34,13,-.08,0,Math.PI*2);ctx.fill();
+
+  // Base de roca
+  const stone=ctx.createLinearGradient(-28,-22,25,22);
+  stone.addColorStop(0,"#b7c0bd");
+  stone.addColorStop(.45,"#8f9b9a");
+  stone.addColorStop(1,"#667273");
+  ctx.fillStyle=stone;
+  ctx.beginPath();
+  ctx.moveTo(-31,8);
+  ctx.quadraticCurveTo(-28,-13,-13,-22);
+  ctx.quadraticCurveTo(7,-31,24,-17);
+  ctx.quadraticCurveTo(35,-4,28,12);
+  ctx.quadraticCurveTo(10,25,-12,22);
+  ctx.quadraticCurveTo(-29,20,-31,8);
+  ctx.closePath();ctx.fill();
+
+  // Cara iluminada
+  ctx.fillStyle="#cbd1ce";
+  ctx.beginPath();
+  ctx.moveTo(-18,-14);ctx.lineTo(-4,-23);ctx.lineTo(10,-17);
+  ctx.lineTo(1,-5);ctx.lineTo(-18,-4);ctx.closePath();ctx.fill();
+
+  // Grietas
+  ctx.strokeStyle="rgba(57,67,67,.48)";ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(-3,-17);ctx.lineTo(-7,-7);ctx.lineTo(-1,1);
+  ctx.moveTo(13,-11);ctx.lineTo(9,-2);ctx.lineTo(14,7);
+  ctx.moveTo(-19,4);ctx.lineTo(-9,8);
+  ctx.stroke();
+
+  // Musgo
+  ctx.strokeStyle="rgba(69,128,76,.55)";ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(-25,10);ctx.quadraticCurveTo(-15,4,-5,8);ctx.stroke();
+
   ctx.restore();
 }
 
 function house(x,y,s=1,roof="#b75b4d"){
   ctx.save();ctx.translate(x,y);ctx.scale(s,s);
-  ctx.fillStyle="rgba(40,55,40,.18)";
-  ctx.beginPath();ctx.ellipse(0,55,90,24,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle="#f3d9a8"; roundedRect(-78,-15,156,80,12);ctx.fill();
+
+  // Sombra
+  ctx.fillStyle="rgba(38,52,38,.20)";
+  ctx.beginPath();ctx.ellipse(0,61,105,27,0,0,Math.PI*2);ctx.fill();
+
+  // Cuerpo
+  const wall=ctx.createLinearGradient(-75,-15,75,65);
+  wall.addColorStop(0,"#f6dfb2");
+  wall.addColorStop(.55,"#e7c78f");
+  wall.addColorStop(1,"#c99d6b");
+  ctx.fillStyle=wall;
+  roundedRect(-78,-15,156,82,12);ctx.fill();
+
+  // Piedras de zócalo
+  ctx.fillStyle="rgba(125,94,64,.22)";
+  for(let i=0;i<7;i++){
+    roundedRect(-68+i*21,50,17,9,3);ctx.fill();
+  }
+
+  // Tejado base
+  ctx.fillStyle="#763e39";
+  ctx.beginPath();ctx.moveTo(-96,-12);ctx.lineTo(0,-84);ctx.lineTo(96,-12);ctx.lineTo(87,3);ctx.lineTo(0,-61);ctx.lineTo(-87,3);ctx.closePath();ctx.fill();
+
+  // Tejas
   ctx.fillStyle=roof;
-  ctx.beginPath();ctx.moveTo(-92,-12);ctx.lineTo(0,-78);ctx.lineTo(92,-12);ctx.closePath();ctx.fill();
-  ctx.fillStyle="#754638";roundedRect(-16,24,32,41,6);ctx.fill();
-  ctx.fillStyle="#9ed4df";roundedRect(34,4,27,26,5);ctx.fill();
-  ctx.fillStyle="#9ed4df";roundedRect(-61,4,27,26,5);ctx.fill();
+  ctx.beginPath();ctx.moveTo(-89,-11);ctx.lineTo(0,-77);ctx.lineTo(89,-11);ctx.lineTo(82,0);ctx.lineTo(0,-63);ctx.lineTo(-82,0);ctx.closePath();ctx.fill();
+
+  ctx.strokeStyle="rgba(104,51,45,.55)";ctx.lineWidth=4;
+  for(let i=-4;i<=4;i++){
+    ctx.beginPath();
+    ctx.moveTo(i*17,-17-Math.abs(i)*8);
+    ctx.lineTo(i*17,-12-Math.abs(i)*8);
+    ctx.stroke();
+  }
+
+  // Chimenea
+  ctx.fillStyle="#a75e4d";
+  roundedRect(35,-66,17,38,4);ctx.fill();
+  ctx.fillStyle="#81443b";roundedRect(32,-69,23,6,3);ctx.fill();
+
+  // Puerta
+  const door=ctx.createLinearGradient(-16,18,16,64);
+  door.addColorStop(0,"#81523a");door.addColorStop(1,"#593a2b");
+  ctx.fillStyle=door;roundedRect(-17,19,34,48,6);ctx.fill();
+  ctx.fillStyle="#d8b35d";ctx.beginPath();ctx.arc(8,44,3,0,Math.PI*2);ctx.fill();
+
+  // Ventanas
+  function windowBox(wx){
+    ctx.fillStyle="#68463a";roundedRect(wx,2,32,30,6);ctx.fill();
+    ctx.fillStyle="#a9dce3";roundedRect(wx+4,6,24,22,4);ctx.fill();
+    ctx.strokeStyle="rgba(255,255,255,.55)";ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(wx+16,6);ctx.lineTo(wx+16,28);ctx.moveTo(wx+4,17);ctx.lineTo(wx+28,17);ctx.stroke();
+  }
+  windowBox(-61);windowBox(29);
+
+  // Farol
+  ctx.fillStyle="#60412f";ctx.fillRect(75,5,4,45);
+  ctx.fillStyle="#f7df8c";ctx.beginPath();ctx.arc(77,5,7,0,Math.PI*2);ctx.fill();
+
+  // Flores junto a la entrada
+  ctx.fillStyle="#ef9bb5";
+  ctx.beginPath();ctx.arc(-31,65,4,0,Math.PI*2);ctx.arc(-41,61,3,0,Math.PI*2);ctx.fill();
+
   ctx.restore();
 }
 
@@ -208,10 +357,10 @@ function village(){
   ctx.fillStyle="#d8bd88";
   ctx.beginPath();ctx.ellipse(930,1480,430,280,0,0,Math.PI*2);ctx.fill();
 
-  house(760,1390,1.0,"#c46655");
-  house(1110,1395,.9,"#a95362");
-  house(720,1640,.85,"#d18a4d");
-  house(1110,1660,1.0,"#bb6650");
+  house(760,1390,1.08,"#c46655");
+  house(1110,1395,.96,"#a95362");
+  house(720,1640,.92,"#d18a4d");
+  house(1110,1660,1.05,"#bb6650");
 
   // pozo decorativo
   ctx.fillStyle="#81766a";

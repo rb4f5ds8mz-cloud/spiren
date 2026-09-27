@@ -142,17 +142,19 @@ async function attackAnimation(){
   }
 
   // frame, duración(ms), desplazamiento X, escala
+  // Secuencia de 8 fotogramas reales (0-7).
+  // Los tiempos son deliberadamente más largos para que el movimiento
+  // sea claramente visible también en iPhone/Safari.
   const sequence=[
-    [0,120,0,1.00],   // reposo
-    [1,95,10,1.01],   // preparación
-    [2,80,28,1.02],   // impulso
-    [3,65,58,1.03],   // salida
-    [4,75,190,1.04],  // carrera
-    [5,75,365,1.03],  // ataque
-    [6,90,470,1.01],  // impacto
-    [7,105,230,1.00], // recuperación
-    [8,115,75,1.00],  // regreso
-    [0,90,0,1.00]     // reposo
+    [0,220,0,1.00],    // reposo
+    [1,180,12,1.01],   // preparación
+    [2,160,35,1.03],   // impulso
+    [3,140,75,1.05],   // salida
+    [4,260,230,1.07],  // carrera
+    [5,300,430,1.08],  // golpe
+    [6,220,500,1.03],  // impacto
+    [7,280,220,1.00],  // recuperación
+    [0,240,0,1.00]     // vuelta al reposo
   ];
 
   for(const [frame,duration,x,scale] of sequence){

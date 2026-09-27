@@ -33,8 +33,11 @@ body{display:grid;place-items:center}
 #enemyHpText{position:absolute;left:80.7%;top:9.55%;z-index:5;pointer-events:none;color:#fff;font:900 20px Arial,sans-serif;text-shadow:2px 2px 0 #000;transform:translateX(-50%);}
 #attack.locked{pointer-events:none;opacity:.7}
 #attackScene{position:absolute;inset:0;z-index:2;display:none;pointer-events:none;overflow:hidden;background:transparent;clip-path:polygon(9% 39%,38% 39%,38% 82%,9% 82%);-webkit-clip-path:polygon(9% 39%,38% 39%,38% 82%,9% 82%);}
-#attackScene::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 48% 58% at 52% 58%,rgba(8,10,16,.98) 0%,rgba(20,22,30,.96) 38%,rgba(35,37,45,.78) 58%,rgba(40,42,48,0) 78%);filter:blur(7px);}
+#attackScene::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 52% 64% at 52% 58%,rgba(8,10,16,.28) 0%,rgba(12,15,24,.12) 58%,rgba(12,15,24,0) 80%);filter:blur(4px);}
 #attackCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none;display:none;image-rendering:auto}
+#combatFx{position:absolute;inset:0;width:100%;height:100%;z-index:9;pointer-events:none;display:none}
+#game.cinematicHit{animation:cinematicHit .16s steps(2,end)}
+@keyframes cinematicHit{0%{transform:translate(0,0)}25%{transform:translate(-7px,2px)}50%{transform:translate(6px,-2px)}75%{transform:translate(-4px,1px)}100%{transform:translate(0,0)}}
 #attackSprite{display:none!important}
 #attackSmoke{position:absolute;left:230px;top:415px;width:370px;height:320px;object-fit:fill;z-index:2;pointer-events:none;display:none;opacity:0;will-change:opacity,transform}
 #attackSlash{position:absolute;width:260px;height:200px;object-fit:contain;z-index:4;pointer-events:none;display:none;opacity:0;will-change:opacity,transform}
@@ -98,6 +101,15 @@ game.appendChild(attackCanvas);
 const attackCtx=attackCanvas.getContext('2d');
 attackCtx.imageSmoothingEnabled=true;
 
+// Capa cinematográfica independiente: impactos, estelas, partículas y daño.
+const combatFx=document.createElement('canvas');
+combatFx.id='combatFx';
+combatFx.width=1672;
+combatFx.height=940;
+game.appendChild(combatFx);
+const fxCtx=combatFx.getContext('2d');
+fxCtx.imageSmoothingEnabled=true;
+
 const frameImages=frames.map(src=>{
   const img=new Image();
   img.decoding='async';
@@ -142,92 +154,156 @@ async function attackAnimation(){
   attacking=true;
   attackBtn.classList.add('locked');
 
-  // ESCENA DE ATAQUE: ocultamos al ninja que está dibujado dentro del fondo
-  // y ponemos un fondo limpio únicamente en su zona. El único ninja visible
-  // durante el ataque es el que se dibuja en attackCanvas.
   attackScene.style.display='block';
   attackCanvas.style.display='block';
+  combatFx.style.display='block';
   sprite.style.display='none';
   smoke.style.display='none';
   slash.style.display='none';
 
   await allFramesReady();
 
-  const W=1672,H=940;
-  const size=360;
-  const startX=210;
-  const startY=405;
-
-  // Cada fotograma cambia de pose y además se desplaza.
-  // El desplazamiento se interpola dentro de cada tramo para evitar
-  // el efecto de "sprite que aparece de golpe".
+  const W=1672,H=940,size=350,startX=215,startY=405;
   const keyframes=[
-    {f:0,x:0,y:10,s:1.00,r:-0.01,d:180},
-    {f:1,x:10,y:3,s:1.01,r:-0.04,d:150},
-    {f:2,x:35,y:-2,s:1.03,r:-0.07,d:140},
-    {f:3,x:75,y:-8,s:1.05,r:-0.10,d:130},
-    {f:4,x:155,y:-14,s:1.08,r:-0.06,d:170},
-    {f:5,x:285,y:-20,s:1.10,r:0.02,d:180},
-    {f:6,x:405,y:-12,s:1.08,r:0.10,d:190},
-    {f:7,x:270,y:0,s:1.03,r:0.05,d:180},
-    {f:0,x:0,y:10,s:1.00,r:0,d:220}
+    {f:0,x:0,y:8,s:1.00,d:170},
+    {f:1,x:12,y:2,s:1.02,d:130},
+    {f:2,x:40,y:-5,s:1.04,d:120},
+    {f:3,x:82,y:-11,s:1.07,d:105},
+    {f:4,x:175,y:-16,s:1.10,d:125},
+    {f:5,x:315,y:-21,s:1.13,d:135},
+    {f:6,x:430,y:-10,s:1.08,d:155},
+    {f:7,x:260,y:2,s:1.03,d:155},
+    {f:0,x:0,y:8,s:1.00,d:180}
   ];
-
   const total=keyframes.reduce((sum,k)=>sum+k.d,0);
-  const impactAt=955;
-  const t0=performance.now();
-  let hit=false;
+  const impactAt=765;
+  const particles=[];
+  let hit=false,last=performance.now();
+
+  function spawnParticles(x,y,count=24){
+    for(let i=0;i<count;i++){
+      const a=Math.random()*Math.PI*2, sp=120+Math.random()*360;
+      particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:2+Math.random()*5,life:.45+Math.random()*.45});
+    }
+  }
 
   await new Promise(resolve=>{
+    const t0=performance.now();
     function draw(now){
       const elapsed=now-t0;
-      let acc=0;
-      let a=keyframes[0];
-      let b=keyframes[1];
+      const dt=Math.min(.035,(now-last)/1000); last=now;
+      let acc=0,a=keyframes[0],b=keyframes[1];
       for(let i=0;i<keyframes.length-1;i++){
-        if(elapsed<=acc+keyframes[i].d){
-          a=keyframes[i];
-          b=keyframes[i+1];
-          break;
-        }
+        if(elapsed<=acc+keyframes[i].d){a=keyframes[i];b=keyframes[i+1];break;}
         acc+=keyframes[i].d;
       }
       const p=Math.max(0,Math.min(1,(elapsed-acc)/a.d));
       const ease=p*p*(3-2*p);
-      const x=a.x+(b.x-a.x)*ease;
-      const y=a.y+(b.y-a.y)*ease;
-      const scale=a.s+(b.s-a.s)*ease;
-      const rot=a.r+(b.r-a.r)*ease;
+      const x=a.x+(b.x-a.x)*ease, y=a.y+(b.y-a.y)*ease;
+      const sc=a.s+(b.s-a.s)*ease;
 
       attackCtx.clearRect(0,0,W,H);
+      // Estelas del ninja: varias copias fantasma crean sensación de velocidad.
+      const trail=[.16,.11,.07];
+      for(let n=trail.length;n>=1;n--){
+        const tx=x-n*32, ty=y+n*2;
+        attackCtx.globalAlpha=trail[n-1];
+        const img=frameImages[Math.max(0,a.f-1)];
+        attackCtx.drawImage(img,startX+tx,startY+ty,size*sc,size*sc);
+      }
+      attackCtx.globalAlpha=1;
       const img=frameImages[a.f];
-      attackCtx.save();
-      attackCtx.translate(startX+x+size*scale/2,startY+y+size*scale/2);
-      attackCtx.rotate(rot);
-      attackCtx.drawImage(img,-size*scale/2,-size*scale/2,size*scale,size*scale);
-      attackCtx.restore();
+      attackCtx.drawImage(img,startX+x,startY+y,size*sc,size*sc);
+
+      // Líneas de velocidad durante la carrera.
+      if(elapsed>280 && elapsed<850){
+        attackCtx.save();
+        attackCtx.globalAlpha=.35;
+        attackCtx.lineCap='round';
+        for(let n=0;n<9;n++){
+          const yy=440+n*24+(elapsed*.08+n*17)%20;
+          attackCtx.strokeStyle=n%2?'rgba(255,255,255,.35)':'rgba(80,170,255,.35)';
+          attackCtx.lineWidth=2+n%3;
+          attackCtx.beginPath();
+          attackCtx.moveTo(70+n*22,yy);
+          attackCtx.lineTo(210+x*.55+n*18,yy-4);
+          attackCtx.stroke();
+        }
+        attackCtx.restore();
+      }
+
+      fxCtx.clearRect(0,0,W,H);
+      // Estela de espada: arco luminoso en el momento del golpe.
+      if(elapsed>570 && elapsed<900){
+        const q=Math.min(1,Math.max(0,(elapsed-570)/330));
+        fxCtx.save();
+        fxCtx.translate(900,540);
+        fxCtx.rotate(-.55+q*.35);
+        fxCtx.globalAlpha=(1-Math.abs(q-.55)*1.5);
+        fxCtx.strokeStyle='rgba(255,245,190,.95)';
+        fxCtx.shadowColor='rgba(255,180,60,.8)';
+        fxCtx.shadowBlur=22;
+        fxCtx.lineWidth=13;
+        fxCtx.beginPath();
+        fxCtx.arc(0,0,125,-1.35,.45);
+        fxCtx.stroke();
+        fxCtx.strokeStyle='rgba(255,255,255,.9)';
+        fxCtx.lineWidth=4;
+        fxCtx.beginPath();
+        fxCtx.arc(0,0,132,-1.32,.40);
+        fxCtx.stroke();
+        fxCtx.restore();
+      }
 
       if(!hit && elapsed>=impactAt){
         hit=true;
         setHP(enemyHP-15);
-        hitEffect();
+        spawnParticles(1190,555,34);
+        game.classList.remove('cinematicHit');
+        void game.offsetWidth;
+        game.classList.add('cinematicHit');
       }
 
-      if(elapsed<total){
-        requestAnimationFrame(draw);
-      }else{
-        attackCtx.clearRect(0,0,W,H);
-        resolve();
+      // Partículas del impacto.
+      for(let i=particles.length-1;i>=0;i--){
+        const pt=particles[i];
+        pt.x+=pt.vx*dt; pt.y+=pt.vy*dt; pt.vy+=420*dt; pt.life-=dt;
+        if(pt.life<=0){particles.splice(i,1);continue;}
+        fxCtx.globalAlpha=Math.max(0,Math.min(1,pt.life*1.8));
+        fxCtx.fillStyle='rgba(255,211,96,1)';
+        fxCtx.beginPath(); fxCtx.arc(pt.x,pt.y,pt.r,0,Math.PI*2); fxCtx.fill();
       }
+      fxCtx.globalAlpha=1;
+
+      if(hit){
+        const f=Math.max(0,1-(elapsed-impactAt)/260);
+        fxCtx.fillStyle=`rgba(255,245,205,${f*.20})`;
+        fxCtx.fillRect(0,0,W,H);
+        fxCtx.font='900 58px Arial';
+        fxCtx.textAlign='center';
+        fxCtx.lineWidth=7;
+        fxCtx.strokeStyle='rgba(0,0,0,.9)';
+        fxCtx.strokeText('-15',1190,480-(elapsed-impactAt)*.10);
+        fxCtx.fillStyle='rgba(255,238,120,1)';
+        fxCtx.fillText('-15',1190,480-(elapsed-impactAt)*.10);
+      }
+
+      if(elapsed<total || particles.length){requestAnimationFrame(draw);}
+      else resolve();
     }
     requestAnimationFrame(draw);
   });
 
+  attackCtx.clearRect(0,0,W,H);
+  fxCtx.clearRect(0,0,W,H);
   attackCanvas.style.display='none';
+  combatFx.style.display='none';
   attackScene.style.display='none';
+  game.classList.remove('cinematicHit');
   attackBtn.classList.remove('locked');
   attacking=false;
 }
+
 attackBtn.addEventListener('click',()=>{
   if(attacking || enemyHP<=0) return;
   attackAnimation();

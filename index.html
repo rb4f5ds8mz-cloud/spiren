@@ -21,18 +21,10 @@ canvas{
  -webkit-user-select:none;user-select:none;
  -webkit-touch-callout:none;
 }
-#hud{
- position:fixed;top:max(12px,env(safe-area-inset-top));left:12px;right:12px;
- display:flex;justify-content:space-between;pointer-events:none;z-index:5;
- color:white;font:800 12px system-ui;letter-spacing:.5px
-}
-.badge{padding:8px 12px;border-radius:14px;background:#07142acc;border:1px solid #ffffff22;box-shadow:0 4px 16px #0005}
-#dragHint{
- position:fixed;left:50%;top:max(70px,calc(70px + env(safe-area-inset-top)));
- transform:translateX(-50%);z-index:5;pointer-events:none;
- color:#ffffffb8;font:800 11px system-ui;letter-spacing:.7px;
- background:#07142a99;border:1px solid #ffffff18;border-radius:12px;padding:7px 10px;
-}
+#hud{position:fixed;top:max(10px,env(safe-area-inset-top));left:12px;right:12px;height:92px;display:flex;align-items:flex-start;justify-content:space-between;pointer-events:none;z-index:5;color:white;font:800 12px system-ui;letter-spacing:.5px}
+.badge{padding:7px 10px;border-radius:12px;background:transparent;border:0;box-shadow:none;text-shadow:0 2px 6px #0009}
+#options{pointer-events:auto;width:42px;height:42px;padding:0;border-radius:50%;font-size:20px;background:#07142a66;border:1px solid #ffffff22;box-shadow:0 4px 14px #0004}
+#dragHint{position:fixed;left:50%;top:max(58px,calc(58px + env(safe-area-inset-top)));transform:translateX(-50%);z-index:5;pointer-events:none;color:#ffffffb8;font:800 11px system-ui;letter-spacing:.7px;background:transparent;border:0;border-radius:0;padding:0;text-shadow:0 2px 7px #0009}
 #controls{
  position:fixed;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));
  display:flex;justify-content:space-between;align-items:flex-end;padding:0 18px;z-index:6;pointer-events:none
@@ -56,7 +48,7 @@ button:active{transform:scale(.94);background:#21365b}
 </head>
 <body>
 <canvas id="game"></canvas>
-<div id="hud"><div class="badge">ALTURA <span id="height">0</span></div><div class="badge">RÉCORD <span id="best">0</span></div></div>
+<div id="hud"><div class="badge">ALTURA <span id="height">0</span></div><button id="options" aria-label="Opciones">⚙</button></div>
 <div id="controls"><div id="joystick" aria-label="Joystick"><div id="stick"></div></div><button id="jump">JUMP</button></div>
 <div id="dragHint">ARRASTRA LA PIEZA PARA COLOCARLA</div>
 
@@ -428,6 +420,7 @@ joystick.addEventListener("pointerup",e=>{if(e.pointerId===joyPointer){e.prevent
 joystick.addEventListener("pointercancel",e=>{if(e.pointerId===joyPointer)resetJoystick()});
 joystick.addEventListener("lostpointercapture",()=>{if(joyPointer!==null)resetJoystick()});
 document.getElementById("jump").addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation();jump()});
+document.getElementById("options").addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation()});
 let sw=null;
 c.addEventListener("pointerdown",e=>{
  e.preventDefault();

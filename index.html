@@ -7,15 +7,32 @@
 <title>Tower Escape</title>
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#162b55}
-body{touch-action:none}
-canvas{position:fixed;inset:0;display:block;width:100vw;height:100vh;margin:0;padding:0;touch-action:none}
+html,body{
+ margin:0;width:100%;height:100%;overflow:hidden;background:#162b55;
+ touch-action:none;
+ -webkit-user-select:none;user-select:none;
+ -webkit-touch-callout:none;
+ -webkit-text-size-adjust:100%;
+}
+body{position:fixed;inset:0}
+canvas{
+ position:fixed;inset:0;display:block;width:100vw;height:100vh;
+ margin:0;padding:0;touch-action:none;
+ -webkit-user-select:none;user-select:none;
+ -webkit-touch-callout:none;
+}
 #hud{
  position:fixed;top:max(12px,env(safe-area-inset-top));left:12px;right:12px;
  display:flex;justify-content:space-between;pointer-events:none;z-index:5;
  color:white;font:800 12px system-ui;letter-spacing:.5px
 }
 .badge{padding:8px 12px;border-radius:14px;background:#07142acc;border:1px solid #ffffff22;box-shadow:0 4px 16px #0005}
+#dragHint{
+ position:fixed;left:50%;top:max(70px,calc(70px + env(safe-area-inset-top)));
+ transform:translateX(-50%);z-index:5;pointer-events:none;
+ color:#ffffffb8;font:800 11px system-ui;letter-spacing:.7px;
+ background:#07142a99;border:1px solid #ffffff18;border-radius:12px;padding:7px 10px;
+}
 #controls{
  position:fixed;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));
  display:flex;justify-content:space-between;padding:0 18px;z-index:6;pointer-events:none
@@ -34,6 +51,7 @@ button:active{transform:scale(.94);background:#21365b}
 <canvas id="game"></canvas>
 <div id="hud"><div class="badge">ALTURA <span id="height">0</span></div><div class="badge">RÉCORD <span id="best">0</span></div></div>
 <div id="controls"><div class="grp"><button id="left">◀</button><button id="right">▶</button></div><button id="jump">JUMP</button></div>
+<div id="dragHint">ARRASTRA LA PIEZA PARA COLOCARLA</div>
 
 <script>
 "use strict";
@@ -43,6 +61,7 @@ const BX=232,BY=160,BW=560,BH=1320,COLS=10,ROWS=24,CELL=56;
 let scale=1,ox=0,oy=0;
 let board=Array.from({length:ROWS},()=>Array(COLS).fill(null));
 let active=null,spawn=0.35,last=performance.now(),left=false,right=false;
+let piecePointer=null,pieceDrag=null;
 let state="play",best=+localStorage.getItem("tebest")||0;
 const player={x:4.5,y:22.1,w:.5,h:.8,vx:0,vy:0,ground:false};
 const pieces=[
@@ -116,6 +135,55 @@ function end(win){
  const h=Math.max(0,Math.floor((ROWS-player.y)*10));
  if(h>best){best=h;localStorage.setItem("tebest",best)}
 }
+function canvasPoint(clientX,clientY){
+ return {x:(clientX-ox)/scale,y:(clientY-oy)/scale};
+}
+function insideBoardPoint(pt){
+ return pt.x>=BX && pt.x<=BX+BW && pt.y>=BY && pt.y<=BY+BH;
+}
+function startPieceDrag(e){
+ if(!active||state!=="play"||piecePointer!==null)return false;
+ const pt=canvasPoint(e.clientX,e.clientY);
+ if(!insideBoardPoint(pt))return false;
+ const gx=(pt.x-BX)/CELL-active.x;
+ const gy=(pt.y-BY)/CELL-active.y;
+ if(gx<0||gy<0||gx>active.m[0].length||gy>active.m.length)return false;
+ piecePointer=e.pointerId;
+ pieceDrag={grabX:gx,grabY:gy};
+ try{c.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();
+ return true;
+}
+function updatePieceDrag(e){
+ if(e.pointerId!==piecePointer||!active)return;
+ const pt=canvasPoint(e.clientX,e.clientY);
+ let nx=Math.round((pt.x-BX)/CELL-pieceDrag.grabX);
+ let ny=Math.floor((pt.y-BY)/CELL-pieceDrag.grabY);
+ nx=Math.max(0,Math.min(COLS-active.m[0].length,nx));
+ ny=Math.max(-active.m.length,Math.min(ROWS-active.m.length,ny));
+ // Mientras arrastramos, la pieza puede moverse libremente por la torre.
+ // Nunca atraviesa bloques ya colocados.
+ if(!hit(active,nx-active.x,ny-active.y,active.m)){
+   active.x=nx;
+   active.y=ny;
+ }else if(!hit(active,nx-active.x,0,active.m)){
+   active.x=nx;
+ }
+ e.preventDefault();
+}
+function endPieceDrag(e){
+ if(e.pointerId!==piecePointer)return;
+ if(active&&state==="play"){
+   // Al soltar, la pieza cae hasta el primer apoyo.
+   let guard=0;
+   while(!hit(active,0,1,active.m)&&active.y<ROWS&&guard++<ROWS+2)active.y++;
+   lock();
+ }
+ piecePointer=null;pieceDrag=null;
+ try{c.releasePointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();
+}
+
 function reset(){
  board=Array.from({length:ROWS},()=>Array(COLS).fill(null));
  active=null;spawn=.3;state="play";player.x=4.5;player.y=22.1;player.vx=0;player.vy=0;player.ground=false;
@@ -270,12 +338,38 @@ function update(dt){
 function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
 
-function hold(id,set){const b=document.getElementById(id);const d=e=>{e.preventDefault();set(true)},u=e=>{e.preventDefault();set(false)};b.addEventListener("pointerdown",d);b.addEventListener("pointerup",u);b.addEventListener("pointercancel",u);b.addEventListener("pointerleave",u)}
+function hold(id,set){const b=document.getElementById(id);const d=e=>{e.preventDefault();e.stopPropagation();set(true)},u=e=>{e.preventDefault();e.stopPropagation();set(false)};b.addEventListener("pointerdown",d);b.addEventListener("pointerup",u);b.addEventListener("pointercancel",u);b.addEventListener("pointerleave",u)}
 hold("left",v=>left=v);hold("right",v=>right=v);
 document.getElementById("jump").addEventListener("pointerdown",e=>{e.preventDefault();jump()});
 let sw=null;
-c.addEventListener("pointerdown",e=>sw={x:e.clientX,y:e.clientY});
-c.addEventListener("pointerup",e=>{if(!sw)return;const dx=e.clientX-sw.x,dy=e.clientY-sw.y;if(Math.abs(dx)>30&&Math.abs(dx)>Math.abs(dy))move(dx>0?1:-1);else jump();sw=null});
+c.addEventListener("pointerdown",e=>{
+ e.preventDefault();
+ if(piecePointer!==null)return;
+ if(startPieceDrag(e))return;
+ sw={x:e.clientX,y:e.clientY,pointerId:e.pointerId};
+});
+c.addEventListener("pointermove",e=>{
+ if(piecePointer!==null)updatePieceDrag(e);
+});
+c.addEventListener("pointerup",e=>{
+ if(piecePointer!==null){endPieceDrag(e);return}
+ if(!sw||e.pointerId!==sw.pointerId)return;
+ const dx=e.clientX-sw.x,dy=e.clientY-sw.y;
+ if(Math.abs(dx)>30&&Math.abs(dx)>Math.abs(dy))move(dx>0?1:-1);
+ else jump();
+ sw=null;
+});
+c.addEventListener("pointercancel",e=>{
+ if(piecePointer!==null){piecePointer=null;pieceDrag=null}
+ if(sw&&e.pointerId===sw.pointerId)sw=null;
+});
+c.addEventListener("contextmenu",e=>e.preventDefault());
+document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
+document.addEventListener("gesturechange",e=>e.preventDefault(),{passive:false});
+document.addEventListener("gestureend",e=>e.preventDefault(),{passive:false});
+document.addEventListener("touchstart",e=>e.preventDefault(),{passive:false});
+document.addEventListener("touchmove",e=>e.preventDefault(),{passive:false});
+document.addEventListener("touchend",e=>e.preventDefault(),{passive:false});
 addEventListener("keydown",e=>{if(e.key==="ArrowLeft")left=true;if(e.key==="ArrowRight")right=true;if(e.key===" "||e.key==="ArrowUp")jump();if(e.key==="r")reset()});
 addEventListener("keyup",e=>{if(e.key==="ArrowLeft")left=false;if(e.key==="ArrowRight")right=false});
 </script>

@@ -26,8 +26,8 @@ canvas{
 #options{pointer-events:auto;width:42px;height:42px;padding:0;border-radius:50%;font-size:20px;background:#07142a66;border:1px solid #ffffff22;box-shadow:0 4px 14px #0004}
 #dragHint{position:fixed;left:50%;top:max(58px,calc(58px + env(safe-area-inset-top)));transform:translateX(-50%);z-index:5;pointer-events:none;color:#ffffffb8;font:800 11px system-ui;letter-spacing:.7px;background:transparent;border:0;border-radius:0;padding:0;text-shadow:0 2px 7px #0009}
 #controls{
- position:fixed;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));
- display:flex;justify-content:space-between;align-items:flex-end;padding:0 18px;z-index:6;pointer-events:none
+ position:fixed;left:0;right:0;bottom:max(18px,env(safe-area-inset-bottom));
+ height:170px;display:flex;justify-content:space-between;align-items:center;padding:0 28px;z-index:6;pointer-events:none
 }
 button{
  border:1px solid #ffffff2d;background:#0a1425e8;color:#fff;font:900 25px system-ui;
@@ -56,7 +56,7 @@ button:active{transform:scale(.94);background:#21365b}
 "use strict";
 const c=document.getElementById("game"),x=c.getContext("2d");
 const DESIGN_W=1024,DESIGN_H=1536;
-const BX=232,BY=160,BW=560,BH=1320,COLS=10,ROWS=24,CELL=56;
+const BX=262,BY=110,BW=500,BH=1200,COLS=10,ROWS=24,CELL=50;
 let scale=1,ox=0,oy=0;
 let board=Array.from({length:ROWS},()=>Array(COLS).fill(null));
 let active=null,spawn=0.35,last=performance.now(),left=false,right=false;
@@ -349,6 +349,15 @@ function draw(){
 
  // salida
  x.fillStyle="#ffd65a";x.globalAlpha=.75;x.fillRect(BX,BY+4,BW,4);x.globalAlpha=1;
+
+ // Zona inferior reservada exclusivamente para los controles.
+ // El escenario termina antes de esta franja para que el personaje nunca quede debajo del HUD.
+ const controlTop=BY+BH+2;
+ x.fillStyle="#07142ae8";
+ x.fillRect(0,controlTop,DESIGN_W,DESIGN_H-controlTop);
+ x.strokeStyle="#ffffff12";x.lineWidth=2;
+ x.beginPath();x.moveTo(0,controlTop);x.lineTo(DESIGN_W,controlTop);x.stroke();
+
  if(state==="lose"){
   x.fillStyle="#050914cc";x.fillRect(0,0,DESIGN_W,DESIGN_H);
   x.textAlign="center";x.textBaseline="middle";

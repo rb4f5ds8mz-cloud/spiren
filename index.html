@@ -35,22 +35,29 @@ canvas{
 }
 #controls{
  position:fixed;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));
- display:flex;justify-content:space-between;padding:0 18px;z-index:6;pointer-events:none
+ display:flex;justify-content:space-between;align-items:flex-end;padding:0 18px;z-index:6;pointer-events:none
 }
-.grp{display:flex;gap:10px;pointer-events:auto}
 button{
- width:62px;height:62px;border-radius:19px;border:1px solid #ffffff2d;
- background:#0a1425e8;color:#fff;font:900 25px system-ui;
- box-shadow:0 7px 18px #0007;touch-action:none;-webkit-tap-highlight-color:transparent
+ border:1px solid #ffffff2d;background:#0a1425e8;color:#fff;font:900 25px system-ui;
+ box-shadow:0 7px 18px #0007;touch-action:none;-webkit-tap-highlight-color:transparent;
+ pointer-events:auto
 }
 button:active{transform:scale(.94);background:#21365b}
-#jump{width:78px;font-size:13px}
+#jump{width:84px;height:84px;border-radius:50%;font-size:12px;letter-spacing:.5px}
+#joystick{width:118px;height:118px;border-radius:50%;position:relative;touch-action:none;
+ background:#07142ab8;border:2px solid #ffffff30;box-shadow:0 8px 24px #0008;pointer-events:auto
+}
+#stick{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px;border-radius:50%;
+ background:#243c68e8;border:2px solid #ffffff55;box-shadow:0 5px 14px #0008;
+ transform:translate(0,0);pointer-events:none}
+#joystick.active{background:#0b1b36e8}
+#joystick.active #stick{background:#31518be8}
 </style>
 </head>
 <body>
 <canvas id="game"></canvas>
 <div id="hud"><div class="badge">ALTURA <span id="height">0</span></div><div class="badge">RÉCORD <span id="best">0</span></div></div>
-<div id="controls"><div class="grp"><button id="left">◀</button><button id="right">▶</button></div><button id="jump">JUMP</button></div>
+<div id="controls"><div id="joystick" aria-label="Joystick"><div id="stick"></div></div><button id="jump">JUMP</button></div>
 <div id="dragHint">ARRASTRA LA PIEZA PARA COLOCARLA</div>
 
 <script>
@@ -129,13 +136,15 @@ function playerHit(nx,ny){
  return false;
 }
 function jump(){if(state==="play"&&player.ground){player.vy=-7.7;player.ground=false}}
-function activeTouchesPlayer(p){
+function activeFallsOntoPlayer(p,prevY){
  if(!p)return false;
  const pl=player.x-player.w/2, pr=player.x+player.w/2;
- const pt=player.y-player.h, pb=player.y;
+ const pt=player.y-player.h;
  for(let yy=0;yy<p.m.length;yy++)for(let xx=0;xx<p.m[yy].length;xx++)if(p.m[yy][xx]){
-  const l=p.x+xx, r=l+1, t=p.y+yy, b=t+1;
-  if(r>pl&&l<pr&&b>pt&&t<pb)return true;
+  const l=p.x+xx, r=l+1;
+  const prevBottom=prevY+yy+1;
+  const currBottom=p.y+yy+1;
+  if(r>pl&&l<pr&&prevBottom<=pt&&currBottom>=pt)return true;
  }
  return false;
 }
@@ -205,19 +214,19 @@ function endPieceDrag(e){
  const distance=Math.hypot(dx,dy);
 
  if(active&&state==="play"){
-   if(distance<12){
-     // Un toque/click sobre la pieza = giro de 90 grados.
-     rotateActivePiece();
-   }else{
-     // Al soltar: la pieza conserva EXACTAMENTE la columna/posición
-     // horizontal elegida y cae verticalmente hasta el primer apoyo.
-     // No se permite que se desplace lateralmente durante la caída.
-     let guard=0;
-     while(!hit(active,0,1,active.m)&&active.y<ROWS&&guard++<ROWS+2){
-       active.y++;
-     }
-     lock();
+  if(distance<12){
+   rotateActivePiece();
+  }else{
+   let guard=0;
+   while(!hit(active,0,1,active.m)&&active.y<ROWS&&guard++<ROWS+2){
+    const prevY=active.y;
+    active.y++;
+    if(activeFallsOntoPlayer(active,prevY)){
+     state="lose";deathTimer=.75;active=null;break;
+    }
    }
+   if(active&&state==="play")lock();
+  }
  }
  piecePointer=null;pieceDrag=null;pieceDragStart=null;
  try{c.releasePointerCapture(e.pointerId)}catch(_){}
@@ -369,10 +378,10 @@ function update(dt){
  if(state!=="play")return;
  if(spawn>0){spawn-=dt;if(spawn<=0)spawnPiece()}
  if(active){
+  const prevY=active.y;
   active.y+=active.fall*dt;
-  // La pieza que está cayendo es peligrosa: si toca físicamente al personaje,
-  // el personaje muere y la partida se reinicia.
-  if(activeTouchesPlayer(active)){
+  // Solo muere si la pieza cae desde arriba sobre el personaje.
+  if(activeFallsOntoPlayer(active,prevY)){
    state="lose";
    deathTimer=.75;
    active=null;
@@ -398,9 +407,27 @@ function update(dt){
 function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
 
-function hold(id,set){const b=document.getElementById(id);const d=e=>{e.preventDefault();e.stopPropagation();set(true)},u=e=>{e.preventDefault();e.stopPropagation();set(false)};b.addEventListener("pointerdown",d);b.addEventListener("pointerup",u);b.addEventListener("pointercancel",u);b.addEventListener("pointerleave",u)}
-hold("left",v=>left=v);hold("right",v=>right=v);
-document.getElementById("jump").addEventListener("pointerdown",e=>{e.preventDefault();jump()});
+// Joystick virtual: controla izquierda/derecha según la posición horizontal de la palanca.
+const joystick=document.getElementById("joystick"),stick=document.getElementById("stick");
+let joyPointer=null;
+function setJoystick(e){
+ const r=joystick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+ let dx=e.clientX-cx,dy=e.clientY-cy;
+ const max=30,dist=Math.hypot(dx,dy);
+ if(dist>max){dx=dx/dist*max;dy=dy/dist*max}
+ stick.style.transform=`translate(${dx}px,${dy}px)`;
+ const dead=7;
+ left=dx < -dead; right=dx > dead;
+}
+function resetJoystick(){
+ joyPointer=null;left=false;right=false;stick.style.transform="translate(0,0)";joystick.classList.remove("active");
+}
+joystick.addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation();joyPointer=e.pointerId;joystick.classList.add("active");joystick.setPointerCapture?.(e.pointerId);setJoystick(e)});
+joystick.addEventListener("pointermove",e=>{if(e.pointerId===joyPointer){e.preventDefault();e.stopPropagation();setJoystick(e)}});
+joystick.addEventListener("pointerup",e=>{if(e.pointerId===joyPointer){e.preventDefault();e.stopPropagation();resetJoystick()}});
+joystick.addEventListener("pointercancel",e=>{if(e.pointerId===joyPointer)resetJoystick()});
+joystick.addEventListener("lostpointercapture",()=>{if(joyPointer!==null)resetJoystick()});
+document.getElementById("jump").addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation();jump()});
 let sw=null;
 c.addEventListener("pointerdown",e=>{
  e.preventDefault();

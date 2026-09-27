@@ -369,7 +369,7 @@ function draw(){
  }
  x.restore();
  document.getElementById("height").textContent=Math.max(0,Math.floor((ROWS-player.y)*10));
- document.getElementById("best").textContent=best;
+ const bestEl=document.getElementById("best"); if(bestEl) bestEl.textContent=best;
 }
 
 function update(dt){

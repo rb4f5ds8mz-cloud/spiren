@@ -9,7 +9,7 @@
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#162b55}
 body{touch-action:none}
-canvas{display:block;width:100%;height:100%;touch-action:none}
+canvas{position:fixed;inset:0;display:block;width:100vw;height:100vh;margin:0;padding:0;touch-action:none}
 #hud{
  position:fixed;top:max(12px,env(safe-area-inset-top));left:12px;right:12px;
  display:flex;justify-content:space-between;pointer-events:none;z-index:5;
@@ -55,12 +55,17 @@ const pieces=[
 ];
 
 function resize(){
- const sx=innerWidth/DESIGN_W,sy=innerHeight/DESIGN_H;
+ const dpr=Math.min(window.devicePixelRatio||1,2);
+ const w=window.innerWidth,h=window.innerHeight;
+ c.width=Math.max(1,Math.floor(w*dpr));
+ c.height=Math.max(1,Math.floor(h*dpr));
+ c.style.width=w+"px";
+ c.style.height=h+"px";
+ const sx=w/DESIGN_W,sy=h/DESIGN_H;
  scale=Math.max(sx,sy);
- ox=(innerWidth-DESIGN_W*scale)/2;
- oy=(innerHeight-DESIGN_H*scale)/2;
- c.width=innerWidth*devicePixelRatio;c.height=innerHeight*devicePixelRatio;
- c.style.width=innerWidth+"px";c.style.height=innerHeight+"px";
+ ox=(w-DESIGN_W*scale)/2;
+ oy=(h-DESIGN_H*scale)/2;
+ x.setTransform(dpr,0,0,dpr,0,0);
 }
 addEventListener("resize",resize);resize();
 
@@ -223,7 +228,8 @@ function drawPlayer(){
 }
 
 function draw(){
- x.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+ const dpr=Math.min(window.devicePixelRatio||1,2);
+ x.setTransform(dpr,0,0,dpr,0,0);
  x.clearRect(0,0,innerWidth,innerHeight);
  x.save();x.translate(ox,oy);x.scale(scale,scale);
  drawSky();drawTower();

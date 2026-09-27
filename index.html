@@ -27,7 +27,7 @@ canvas{
 #dragHint{position:fixed;left:50%;top:max(58px,calc(58px + env(safe-area-inset-top)));transform:translateX(-50%);z-index:5;pointer-events:none;color:#ffffffb8;font:800 11px system-ui;letter-spacing:.7px;background:transparent;border:0;border-radius:0;padding:0;text-shadow:0 2px 7px #0009}
 #controls{
  position:fixed;left:0;right:0;bottom:max(18px,env(safe-area-inset-bottom));
- height:170px;display:flex;justify-content:space-between;align-items:center;padding:0 28px;z-index:6;pointer-events:none
+ height:190px;display:flex;justify-content:space-between;align-items:center;padding:0 28px;z-index:6;pointer-events:none
 }
 button{
  border:1px solid #ffffff2d;background:#0a1425e8;color:#fff;font:900 25px system-ui;
@@ -57,6 +57,8 @@ button:active{transform:scale(.94);background:#21365b}
 const c=document.getElementById("game"),x=c.getContext("2d");
 const DESIGN_W=1024,DESIGN_H=1536;
 const BX=262,BY=110,BW=500,BH=1200,COLS=10,ROWS=24,CELL=50;
+const CONTROL_TOP=1312; // desde aquí hacia abajo no puede entrar el personaje ni las piezas
+const GAME_FLOOR_ROW=ROWS-1;
 let scale=1,ox=0,oy=0;
 let board=Array.from({length:ROWS},()=>Array(COLS).fill(null));
 let active=null,spawn=0.35,last=performance.now(),left=false,right=false;
@@ -280,8 +282,8 @@ function drawTower(){
  // base
  const bg=x.createLinearGradient(BX,0,BX,BY+80);
  bg.addColorStop(0,"#667895");bg.addColorStop(1,"#34435d");
- x.fillStyle=bg;x.fillRect(BX-64,BY+BH-2,BW+128,82);
- for(let i=0;i<12;i++)rr(BX-55+i*55,BY+BH+5,48,58,6,i%2?"#667792":"#52647e","#26344e");
+ x.fillStyle=bg;x.fillRect(BX-64,BY+BH-12,BW+128,12);
+ for(let i=0;i<12;i++)rr(BX-55+i*55,BY+BH-11,48,10,3,i%2?"#667792":"#52647e","#26344e");
 
  // top battlement
  x.fillStyle="#50617e";x.fillRect(BX-64,BY-66,BW+128,70);
@@ -326,7 +328,7 @@ function block(col,row,pal,ghost=false){
 
 function drawPlayer(){
  const px=BX+(player.x+.5)*CELL,py=BY+player.y*CELL;
- x.save();x.translate(px,py);
+ x.save();x.translate(px,py-15);
  x.fillStyle="#00000066";x.beginPath();x.ellipse(0,5,13,5,0,0,7);x.fill();
  x.fillStyle="#283b71";rr(-11,-22,22,24,6,"#293d77");
  x.fillStyle="#f0b995";x.beginPath();x.arc(0,-34,11,0,7);x.fill();
@@ -352,7 +354,7 @@ function draw(){
 
  // Zona inferior reservada exclusivamente para los controles.
  // El escenario termina antes de esta franja para que el personaje nunca quede debajo del HUD.
- const controlTop=BY+BH+2;
+ const controlTop=CONTROL_TOP;
  x.fillStyle="#07142ae8";
  x.fillRect(0,controlTop,DESIGN_W,DESIGN_H-controlTop);
  x.strokeStyle="#ffffff12";x.lineWidth=2;
@@ -397,6 +399,8 @@ function update(dt){
  if(!playerHit(nx,player.y))player.x=nx;else player.vx=0;
  player.vy+=18.5*dt;
  let ny=player.y+player.vy*dt;
+ const maxPlayerY=ROWS-0.02;
+ if(ny>maxPlayerY){ny=maxPlayerY;player.vy=0;player.ground=true}
  if(!playerHit(player.x,ny)){player.y=ny;player.ground=false}
  else{
   if(player.vy>0){let n=0;while(playerHit(player.x,ny)&&n++<20)ny-=.01;player.y=ny;player.ground=true}

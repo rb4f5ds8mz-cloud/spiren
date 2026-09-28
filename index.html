@@ -313,6 +313,8 @@ function update(dt){
 }
 function draw(){
  ctx.clearRect(0,0,W,H);
+ // No se dibujan números/debug sobre el personaje.
+ ctx.font="";
  const b=worldBounds();
  ctx.fillStyle="#142019";ctx.fillRect(0,0,W,H);
  for(let y=b.t;y<b.b;y+=42)for(let x=b.l;x<b.r;x+=42){

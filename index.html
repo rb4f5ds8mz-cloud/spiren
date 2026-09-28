@@ -345,10 +345,26 @@ function drawPlayer(p){
   const sy=row*SPRITE_SIZE;
 
   ctx.imageSmoothingEnabled=true;
+
+  // Ancla cada frame por el centro de apoyo de los pies para que el
+  // personaje quede perfectamente centrado sobre su sombra.
+  const footX = [
+    [27.06,37.14,33.70,29.96], // abajo
+    [38.67,36.81,35.07,35.19], // abajo-derecha
+    [39.86,38.17,32.88,28.56], // derecha
+    [35.92,33.32,30.70,27.26], // arriba-derecha
+    [32.68,36.55,33.57,31.59], // arriba
+    [40.50,36.32,32.19,29.72], // arriba-izquierda
+    [34.36,33.35,32.33,30.89], // izquierda
+    [35.20,35.00,30.97,28.03]  // abajo-izquierda
+  ];
+  const anchorX = footX[row][p.animFrame] ?? 32;
+  const dx = -(anchorX / SPRITE_SIZE) * size;
+
   ctx.drawImage(
    ninjaSprite,
    sx,sy,SPRITE_SIZE,SPRITE_SIZE,
-   -size/2,-size+2,size,size
+   dx,-size+2,size,size
   );
  }
 

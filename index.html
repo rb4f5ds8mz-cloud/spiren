@@ -316,29 +316,31 @@ function drawPlayer(p){
  ctx.translate(p.x,p.y);
  if(p.inv>0)ctx.globalAlpha=.55;
 
- // Sombra anclada a los pies del sprite.
+ // p.x / p.y = posición de los pies.
  ctx.fillStyle="#0008";
  ctx.beginPath();
- ctx.ellipse(0,18,21,6.5,0,0,Math.PI*2);
+ ctx.ellipse(0,2,22,7,0,0,Math.PI*2);
  ctx.fill();
 
- if(ninjaWalkSheet.complete&&ninjaWalkSheet.naturalWidth){
-  const frameW=64,frameH=64;
-  const row={down:0,up:1,left:2,right:3}[p.dir]??0;
-  const sx=p.animFrame*frameW;
-  const sy=row*frameH;
-  const renderH=88;
-  const renderW=88;
+ if(ninjaSprite.complete&&ninjaSprite.naturalWidth){
+  const h=94;
+  const w=h*(ninjaSprite.naturalWidth/ninjaSprite.naturalHeight);
+
+  // El borde inferior del sprite queda exactamente en el punto del suelo.
   ctx.imageSmoothingEnabled=true;
-  // El sprite está centrado y apoyado sobre los pies.
-  ctx.drawImage(ninjaWalkSheet,sx,sy,frameW,frameH,-renderW/2,-renderH+12,renderW,renderH);
+  ctx.drawImage(ninjaSprite,-w/2,-h+2,w,h);
+ }else{
+  ctx.fillStyle="#171b2a";
+  ctx.beginPath();
+  ctx.ellipse(0,-28,13,18,0,0,Math.PI*2);
+  ctx.fill();
  }
 
  if(state.upgrades.orb>0){
   ctx.strokeStyle="#60a5fa66";
   ctx.lineWidth=3;
   ctx.beginPath();
-  ctx.arc(0,0,48+state.upgrades.orb*5,0,Math.PI*2);
+  ctx.arc(0,-24,48+state.upgrades.orb*5,0,Math.PI*2);
   ctx.stroke();
  }
  ctx.restore();
